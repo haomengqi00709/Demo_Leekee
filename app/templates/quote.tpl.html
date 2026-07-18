@@ -314,50 +314,52 @@ $('g-cur').addEventListener('change',e=>{st.cur=e.target.value;$('fx-wrap').styl
 $('g-fx').addEventListener('input',()=>{renderPreview();renderCart();});
 $('q-qty').addEventListener('input',renderPreview);
 $('clear-btn').addEventListener('click',()=>{st.cart=[];renderCart();});
-// 打印/导出：另开一个干净的报价单文档（CJK 安全字体，避免打印时中文丢失 & 版面乱）
+// 打印/导出：把报价单画到 canvas 生成图片再打印（图片按像素打印，彻底避开浏览器打印丢字体/丢中文的问题）
 function printQuote(){
   if(!st.cart.length){toast('报价单是空的，先加产品');return;}
-  let rows='',tot=0,tq=0;
-  st.cart.forEach((l,i)=>{
-    const unit=l.base*(1+st.markup.pct/100), amt=unit*l.qty; tot+=amt; tq+=l.qty;
-    const coll=l.coll==='__single__'?'单品':l.coll;
-    rows+=`<tr><td class="c">${i+1}</td><td><b>${coll} · ${l.code}</b> ${l.cap||''}<div class="cfg">${l.cfg}${l.prints?' · 印刷 '+l.prints:''}</div></td><td class="n">${l.qty.toLocaleString()}</td><td class="n">${money(unit)}</td><td class="n">${money(amt)}</td></tr>`;
-  });
-  const dt=new Date(), pad=n=>String(n).padStart(2,'0');
+  const items=st.cart.map(l=>{const unit=l.base*(1+st.markup.pct/100);return{l,unit,amt:unit*l.qty};});
+  const tot=items.reduce((s,o)=>s+o.amt,0), tq=items.reduce((s,o)=>s+o.l.qty,0);
+  const dt=new Date(),pad=n=>String(n).padStart(2,'0');
   const today=`${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())}`;
-  const doc=`<!doctype html><html lang="zh"><head><meta charset="utf-8"><title>李记包装报价单 ${today}</title><style>
-*{box-sizing:border-box}
-body{font-family:"PingFang SC","Microsoft YaHei","Hiragino Sans GB","Heiti SC",system-ui,sans-serif;color:#1a1c20;margin:0;padding:34px;font-size:13px;line-height:1.5}
-.hd{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #b06a2c;padding-bottom:12px}
-.co{font-size:21px;font-weight:800;color:#b06a2c;letter-spacing:.02em}
-.co small{display:block;font-size:10px;color:#999;letter-spacing:.28em;font-weight:500;margin-top:3px}
-.meta{text-align:right;font-size:12px;color:#555;line-height:1.9} .meta b{color:#1a1c20}
-table.items{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:18px}
-table.items th{text-align:left;background:#f6f2ea;border:1px solid #e6e0d5;padding:8px 10px;font-weight:700;font-size:11px;letter-spacing:.03em}
-table.items td{border:1px solid #e6e0d5;padding:8px 10px;vertical-align:top}
-td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap} td.c{text-align:center;color:#999}
-.cfg{color:#7a7a7a;font-size:11px;margin-top:3px}
-.tot{margin-top:16px;display:flex;justify-content:flex-end}
-.tot table{border-collapse:collapse} .tot td{padding:4px 12px;font-size:13px} .tot td.n{text-align:right}
-.tot .big td{font-size:18px;font-weight:800;color:#b06a2c;border-top:2px solid #b06a2c;padding-top:9px}
-.terms{margin-top:22px;font-size:11.5px;color:#666;line-height:1.9;border-top:1px solid #eee;padding-top:12px}
-@media print{@page{margin:14mm}body{padding:0}}
-</style></head><body>
-<div class="hd"><div class="co">李记包装<small>LEEKEE PACKAGING</small></div>
-<div class="meta">报价单 · QUOTATION<br>日期 <b>${today}</b><br>客户加成 <b>${st.markup.tier} 档 (+${st.markup.pct}%)</b></div></div>
-<table class="items"><thead><tr><th class="c">#</th><th>产品 / 配置</th><th class="n">数量</th><th class="n">单价</th><th class="n">金额</th></tr></thead><tbody>${rows}</tbody></table>
-<div class="tot"><table><tr><td>合计数量</td><td class="n">${tq.toLocaleString()} 件</td></tr>
-<tr class="big"><td>报价总额</td><td class="n">${money(tot)}</td></tr></table></div>
-<div class="terms">MOQ 5,000 起 · 价格随数量分档（≥20,000 / ≥50,000 更优）<br>
-付款 30% 定金 / 70% T/T 见提单 · FOB 广州 · 报价有效期 30 天<br>
-注：加成 / 数量折扣 / 印刷费为占位口径，正式报价前需与李记核对。</div>
-<scr`+`ipt>window.onload=function(){setTimeout(function(){window.print();},150);};window.onafterprint=function(){setTimeout(function(){window.close();},80);};</scr`+`ipt>
-</body></html>`;
-  // 用 Blob URL 打开一个真实新页面（比 document.write 可靠），页面自身 onload 触发打印
-  const url=URL.createObjectURL(new Blob([doc],{type:'text/html;charset=utf-8'}));
-  const w=window.open(url,'_blank');
-  if(!w){toast('请允许弹出窗口以导出报价单');URL.revokeObjectURL(url);return;}
-  setTimeout(()=>URL.revokeObjectURL(url),60000);
+  const F='"PingFang SC","Microsoft YaHei","Hiragino Sans GB",sans-serif';
+  const S=2,W=800,PAD=40, colProd=PAD+34, colQty=W-330, colPrice=W-190, colAmt=W-PAD, prodW=colQty-colProd-20;
+  const m=document.createElement('canvas').getContext('2d');
+  function wrap(text,maxw,font){m.font=font;const cs=[...String(text)];let ls=[],cur='';for(const ch of cs){const t=cur+ch;if(m.measureText(t).width>maxw&&cur){ls.push(cur);cur=ch;}else cur=t;}if(cur)ls.push(cur);return ls.length?ls:[''];}
+  const rows=items.map((o,i)=>{const cfg=(o.l.cfg||'')+(o.l.prints?' · 印刷 '+o.l.prints:'');const cl=wrap(cfg,prodW,'11px '+F);return{o,i,cl,h:24+cl.length*15+12};});
+  const headH=94,thH=28,totH=92,terms=['MOQ 5,000 起 · 价格随数量分档（≥20,000 / ≥50,000 更优）','付款 30% 定金 / 70% T/T 见提单 · FOB 广州 · 报价有效期 30 天','注：加成 / 数量折扣 / 印刷费为占位口径，正式报价前需与李记核对。'];
+  const termsH=16+terms.length*20+14, bodyH=rows.reduce((s,r)=>s+r.h,0);
+  const H=Math.ceil(PAD+headH+thH+bodyH+totH+termsH+PAD);
+  const cv=document.createElement('canvas');cv.width=W*S;cv.height=H*S;
+  const x=cv.getContext('2d');x.scale(S,S);x.textBaseline='top';x.fillStyle='#fff';x.fillRect(0,0,W,H);
+  let y=PAD;
+  x.fillStyle='#b06a2c';x.font='800 22px '+F;x.fillText('李记包装',PAD,y);
+  x.fillStyle='#9a9a9a';x.font='600 10px '+F;x.fillText('LEEKEE PACKAGING',PAD,y+29);
+  x.textAlign='right';x.font='12px '+F;x.fillStyle='#666';x.fillText('报价单 · QUOTATION',W-PAD,y);
+  x.fillStyle='#1a1c20';x.fillText('日期 '+today,W-PAD,y+19);x.fillText('客户加成 '+st.markup.tier+' 档（+'+st.markup.pct+'%）',W-PAD,y+37);
+  x.textAlign='left';y+=headH-32;
+  x.strokeStyle='#b06a2c';x.lineWidth=2;x.beginPath();x.moveTo(PAD,y);x.lineTo(W-PAD,y);x.stroke();y+=14;
+  x.fillStyle='#8a7757';x.font='700 11px '+F;x.fillText('#',PAD,y);x.fillText('产品 / 配置',colProd,y);
+  x.textAlign='right';x.fillText('数量',colQty+50,y);x.fillText('单价',colPrice+40,y);x.fillText('金额',colAmt,y);
+  x.textAlign='left';y+=thH-6;x.strokeStyle='#e6e0d5';x.lineWidth=1;x.beginPath();x.moveTo(PAD,y);x.lineTo(W-PAD,y);x.stroke();
+  for(const r of rows){const ry=y+9;
+    x.fillStyle='#9a9a9a';x.font='12px '+F;x.fillText(String(r.i+1),PAD,ry);
+    x.fillStyle='#1a1c20';x.font='700 13px '+F;const coll=r.o.l.coll==='__single__'?'单品':r.o.l.coll;
+    x.fillText(coll+' · '+r.o.l.code+'  '+(r.o.l.cap||''),colProd,ry);
+    x.fillStyle='#7a7a7a';x.font='11px '+F;r.cl.forEach((ln,k)=>x.fillText(ln,colProd,ry+21+k*15));
+    x.fillStyle='#1a1c20';x.font='12px '+F;x.textAlign='right';
+    x.fillText(r.o.l.qty.toLocaleString(),colQty+50,ry);x.fillText(money(r.o.unit),colPrice+40,ry);x.fillText(money(r.o.amt),colAmt,ry);
+    x.textAlign='left';y+=r.h;x.strokeStyle='#efefef';x.beginPath();x.moveTo(PAD,y);x.lineTo(W-PAD,y);x.stroke();}
+  y+=20;x.textAlign='right';x.fillStyle='#555';x.font='13px '+F;
+  x.fillText('合计数量',W-210,y);x.fillStyle='#1a1c20';x.fillText(tq.toLocaleString()+' 件',W-PAD,y);
+  y+=24;x.strokeStyle='#b06a2c';x.lineWidth=2;x.beginPath();x.moveTo(W-330,y);x.lineTo(W-PAD,y);x.stroke();y+=12;
+  x.fillStyle='#b06a2c';x.font='800 18px '+F;x.fillText('报价总额',W-240,y);x.fillText(money(tot),W-PAD,y);
+  x.textAlign='left';y+=42;x.strokeStyle='#eee';x.lineWidth=1;x.beginPath();x.moveTo(PAD,y);x.lineTo(W-PAD,y);x.stroke();y+=12;
+  x.fillStyle='#666';x.font='11px '+F;terms.forEach((t,k)=>x.fillText(t,PAD,y+k*20));
+  const img=cv.toDataURL('image/png');
+  const w=window.open('','_blank');
+  if(!w){toast('请允许弹出窗口以导出报价单');return;}
+  w.document.write('<!doctype html><meta charset="utf-8"><title>李记包装报价单 '+today+'</title><body style="margin:0;text-align:center;background:#fff"><img src="'+img+'" style="max-width:100%;display:inline-block"><scr'+'ipt>window.onload=function(){setTimeout(function(){window.print()},150)};window.onafterprint=function(){setTimeout(function(){window.close()},80)}<\/scr'+'ipt></body>');
+  w.document.close();
 }
 
 $('copy-btn').addEventListener('click',()=>{
