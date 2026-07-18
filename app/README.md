@@ -20,7 +20,10 @@ cd app && uvicorn main:app --reload --port 8000
 ```
 
 ## AI 副驾
-- 设 `export ANTHROPIC_API_KEY=sk-...` 后，AI 副驾用 Claude（`claude-opus-4-8`，可用 `COPILOT_MODEL` 改）把自然语言转成结构化改动。
+- **OpenAI 兼容接口**，DeepSeek / Kimi(Moonshot) / OpenAI 任选，只改 3 个环境变量：
+  - `LLM_API_KEY`、`LLM_BASE_URL`、`LLM_MODEL`
+  - DeepSeek：`https://api.deepseek.com` + `deepseek-chat`；Kimi：`https://api.moonshot.cn/v1` + `kimi-k2-0905-preview`
+- 用 OpenAI function calling 强制输出结构化改动（`copilot.py`）。
 - **没设 key 也能用**：内置确定性正则兜底，保证可演示。
 - 无论哪种，**都要人点“确认应用”才写库**，并写入 `audit_log`。
 
@@ -28,5 +31,5 @@ cd app && uvicorn main:app --reload --port 8000
 默认用 `../pricing_db/pricing.db`；可用环境变量 `PRICING_DB` 覆盖（Railway 上指向挂载卷里的 db 文件）。
 
 ## Railway（最后一步，待做）
-- 挂一个 volume 放 `pricing.db`；设环境变量 `PRICING_DB`、`ANTHROPIC_API_KEY`、`COPILOT_MODEL`。
+- 挂一个 volume 放 `pricing.db`；设环境变量 `PRICING_DB`、`LLM_API_KEY`、`LLM_BASE_URL`、`LLM_MODEL`。
 - 启动命令：`uvicorn main:app --host 0.0.0.0 --port $PORT`。

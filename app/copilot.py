@@ -4,12 +4,16 @@
 import os, re, json
 from db import audit
 
-MODEL = os.environ.get("COPILOT_MODEL", "claude-opus-4-8")
+# LLM 配置 —— OpenAI 兼容接口。DeepSeek / Kimi(Moonshot) / OpenAI 都行，只改这三个环境变量：
+#   DeepSeek : LLM_BASE_URL=https://api.deepseek.com          LLM_MODEL=deepseek-chat
+#   Kimi     : LLM_BASE_URL=https://api.moonshot.cn/v1        LLM_MODEL=kimi-k2-0905-preview (或 moonshot-v1-8k)
+#   OpenAI   : LLM_BASE_URL=https://api.openai.com/v1         LLM_MODEL=gpt-4o
+LLM_API_KEY  = os.environ.get("LLM_API_KEY", "")
+LLM_BASE_URL = os.environ.get("LLM_BASE_URL", "https://api.deepseek.com")
+LLM_MODEL    = os.environ.get("LLM_MODEL", "deepseek-chat")
 
-TOOL = {
-    "name": "propose_change",
-    "description": "把管理员的一句话指令翻译成对报价规则库的一次改动。信息不足时用 action=clarify 追问。",
-    "input_schema": {
+# propose_change 的参数 schema（OpenAI function calling 通用格式）
+SCHEMA = {
         "type": "object",
         "properties": {
             "action": {"type": "string", "enum":
@@ -30,8 +34,12 @@ TOOL = {
             "clarification": {"type": "string", "description": "action=clarify 时要问的问题"},
         },
         "required": ["action", "summary"],
-    },
 }
+FUNCTIONS = [{"type": "function", "function": {
+    "name": "propose_change",
+    "description": "把管理员的一句话指令翻译成对报价规则库的一次改动。信息不足时用 action=clarify 追问。",
+    "parameters": SCHEMA,
+}}]
 
 def _context(con):
     tiers = [f"{t}(+{m}%)" for t, m in con.execute("SELECT tier,markup_pct FROM customer_markups")]
@@ -39,19 +47,26 @@ def _context(con):
     return f"现有客户加成档：{', '.join(tiers)}。现有工艺费：{', '.join(fees)}。"
 
 def _ai_propose(con, text):
-    import anthropic
-    client = anthropic.Anthropic()
+    from openai import OpenAI
+    client = OpenAI(api_key=LLM_API_KEY, base_url=LLM_BASE_URL)
     sys = ("你是李记包装报价系统的管理助手。把管理员这一句话翻译成对规则库的**一次**结构化改动，"
-           "只通过 propose_change 工具输出，不要输出别的文字。" + _context(con))
-    msg = client.messages.create(
-        model=MODEL, max_tokens=1024, system=sys,
-        tools=[TOOL], tool_choice={"type": "tool", "name": "propose_change"},
-        messages=[{"role": "user", "content": text}],
+           "必须调用 propose_change 函数输出，不要输出多余文字。" + _context(con))
+    resp = client.chat.completions.create(
+        model=LLM_MODEL,
+        messages=[{"role": "system", "content": sys}, {"role": "user", "content": text}],
+        tools=FUNCTIONS,
+        tool_choice={"type": "function", "function": {"name": "propose_change"}},
+        temperature=0,
     )
-    for block in msg.content:
-        if block.type == "tool_use":
-            p = dict(block.input); p["_engine"] = "ai"; return p
-    return {"action": "clarify", "summary": "未能解析", "clarification": "请换个说法再试。", "_engine": "ai"}
+    msg = resp.choices[0].message
+    if msg.tool_calls:
+        p = json.loads(msg.tool_calls[0].function.arguments); p["_engine"] = f"ai:{LLM_MODEL}"; return p
+    if msg.content:  # 有些兼容实现会把 JSON 直接放 content
+        try:
+            p = json.loads(msg.content); p["_engine"] = f"ai:{LLM_MODEL}"; return p
+        except Exception:
+            pass
+    return {"action": "clarify", "summary": "未能解析", "clarification": "请换个说法再试。", "_engine": f"ai:{LLM_MODEL}"}
 
 CODE_RE = re.compile(r'[A-Z]{1,3}\d{3,}[A-Z]?')
 
@@ -101,7 +116,7 @@ def _fallback_propose(text, con):
 
 def propose(con, text):
     """返回 {proposal, preview}。preview 含 before/after，供确认。"""
-    if os.environ.get("ANTHROPIC_API_KEY"):
+    if LLM_API_KEY:
         try:
             p = _ai_propose(con, text)
         except Exception as e:
