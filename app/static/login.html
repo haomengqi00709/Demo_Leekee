@@ -1,0 +1,39 @@
+<!doctype html><html lang="zh"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>李记包装 · 登录</title>
+<style>
+:root{--bg:#f3f4f6;--surface:#fff;--ink:#191c21;--ink2:#5c626c;--line:#dbdee4;--accent:#b06a2c;--accent2:#8a5220;
+ --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--mono:ui-monospace,"SF Mono",Menlo,monospace;}
+@media(prefers-color-scheme:dark){:root{--bg:#131519;--surface:#1b1e23;--ink:#e6e8ec;--ink2:#98a0ab;--line:#2c313a;--accent:#d8964f;--accent2:#e6ac6c;}}
+*{box-sizing:border-box}body{margin:0;font-family:var(--sans);background:var(--bg);color:var(--ink);
+ min-height:100vh;display:flex;align-items:center;justify-content:center}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:34px 32px;width:min(360px,92vw);
+ display:flex;flex-direction:column;gap:16px;box-shadow:0 8px 30px rgba(0,0,0,.06)}
+.eyebrow{font-family:var(--mono);font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);font-weight:600}
+h1{margin:.1em 0 0;font-size:1.5rem;letter-spacing:-.01em}
+.sub{color:var(--ink2);font-size:.85rem;margin:-6px 0 6px}
+label{display:flex;flex-direction:column;gap:5px;font-size:.72rem;color:var(--ink2);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em}
+input{font-family:var(--sans);font-size:.95rem;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:11px 12px}
+input:focus{outline:2px solid var(--accent);outline-offset:0}
+button{font-family:var(--sans);font-size:.95rem;font-weight:600;background:var(--accent);color:#fff;border:none;border-radius:9px;padding:12px;cursor:pointer}
+button:hover{background:var(--accent2)}
+.err{color:#c0392b;font-size:.82rem;min-height:1.1em}
+.hint{font-size:.72rem;color:var(--ink2);font-family:var(--mono);text-align:center;border-top:1px solid var(--line);padding-top:12px}
+</style></head><body>
+<form class="card" onsubmit="return doLogin(event)">
+  <span class="eyebrow">李记包装 · Leekee</span>
+  <h1>报价系统登录</h1>
+  <div class="sub">选择你的身份进入</div>
+  <label>用户名<input id="u" autocomplete="username" required></label>
+  <label>密码<input id="p" type="password" autocomplete="current-password" required></label>
+  <div class="err" id="err"></div>
+  <button type="submit">登录</button>
+  <div class="hint">演示账号　管理员 admin / admin123　·　报价员 sales / sales123</div>
+</form>
+<script>
+async function doLogin(e){e.preventDefault();
+  const body=new URLSearchParams({username:u.value,password:p.value});
+  const r=await fetch('/api/login',{method:'POST',body});
+  const d=await r.json();
+  if(d.ok){location=d.redirect;}else{document.getElementById('err').textContent=d.error||'登录失败';}
+  return false;}
+</script></body></html>

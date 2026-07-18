@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+env/
+
+# SQLite transient (WAL) —— pricing.db 本体要提交
+*.db-wal
+*.db-shm
+
+# 密钥 / 环境
+.env
+.env.*
+
+# OS
+.DS_Store
+
+# 源数据 Excel（185MB，体积大不入库；已构建成 pricing.db 提交）
+成本表单/
+*.xlsx
+*.xls
+*.vtt
+~$*
+
+# 抽取的产品图全量（155MB）——只用 force-add 提交 <48KB 的小图子集
+pricing_db/images/
+
+# 生成的独立 artifact 页（运行时用不到，app 用 templates/quote.tpl.html）
+pricing_db/quote_app.html
+pricing_db/db_overview.html
+
+# 临时
+*.log

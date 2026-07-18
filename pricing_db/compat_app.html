@@ -1,0 +1,190 @@
+<title>李记包装 · 兼容性检查</title>
+<style>
+:root{--bg:#f3f4f6;--surface:#fff;--surface2:#eceef2;--ink:#191c21;--ink2:#5c626c;--line:#dbdee4;
+  --accent:#b06a2c;--accent2:#8a5220;--soft:rgba(176,106,44,.11);--good:#2f7d5b;--warn:#b5791f;--bad:#b23a2e;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+  --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;}
+@media (prefers-color-scheme:dark){:root{--bg:#131519;--surface:#1b1e23;--surface2:#22262d;--ink:#e6e8ec;--ink2:#98a0ab;--line:#2c313a;--accent:#d8964f;--accent2:#e6ac6c;--soft:rgba(216,150,79,.14);--good:#54ab82;--warn:#d3a24a;--bad:#dd6a5c;}}
+:root[data-theme="dark"]{--bg:#131519;--surface:#1b1e23;--surface2:#22262d;--ink:#e6e8ec;--ink2:#98a0ab;--line:#2c313a;--accent:#d8964f;--accent2:#e6ac6c;--soft:rgba(216,150,79,.14);--good:#54ab82;--warn:#d3a24a;--bad:#dd6a5c;}
+:root[data-theme="light"]{--bg:#f3f4f6;--surface:#fff;--surface2:#eceef2;--ink:#191c21;--ink2:#5c626c;--line:#dbdee4;--accent:#b06a2c;--accent2:#8a5220;--soft:rgba(176,106,44,.11);--good:#2f7d5b;--warn:#b5791f;--bad:#b23a2e;}
+*{box-sizing:border-box}
+.wrap{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.5;padding:clamp(14px,3vw,34px);min-height:100vh;-webkit-font-smoothing:antialiased}
+.inner{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);font-weight:600}
+h1{font-size:clamp(1.5rem,3vw,2.1rem);margin:.1em 0 0;letter-spacing:-.01em;font-weight:680}
+.lede{color:var(--ink2);margin:.2em 0 0;font-size:.92rem;max-width:72ch}
+.head-row{border-bottom:1px solid var(--line);padding-bottom:12px}
+.statline{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.pill{font-family:var(--mono);font-size:.72rem;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:3px 11px;color:var(--ink2)}
+.pill b{color:var(--ink)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:13px;overflow:hidden}
+.card>h2{font-size:.95rem;margin:0;padding:13px 16px;border-bottom:1px solid var(--line);background:var(--surface2);display:flex;justify-content:space-between;align-items:center}
+.card>h2 .k{font-family:var(--mono);font-size:.68rem;color:var(--ink2);letter-spacing:.08em;font-weight:400}
+.body{padding:16px;display:flex;flex-direction:column;gap:14px}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:.7rem;color:var(--ink2);font-family:var(--mono);letter-spacing:.04em;text-transform:uppercase}
+input{font-family:var(--mono);font-size:.92rem;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:9px 11px}
+input:focus{outline:2px solid var(--accent);outline-offset:0}
+.pair{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:end}
+.pair .vs{font-family:var(--mono);color:var(--ink2);padding-bottom:10px}
+@media(max-width:640px){.pair{grid-template-columns:1fr;}.pair .vs{text-align:center;padding:0}}
+.verdict{border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:8px;border:1px solid var(--line);background:var(--surface)}
+.verdict .badge{font-size:1.35rem;font-weight:700;display:flex;align-items:center;gap:10px}
+.verdict .conf{font-family:var(--mono);font-size:.68rem;padding:2px 8px;border-radius:20px;border:1px solid currentColor}
+.verdict .reason{font-size:.92rem}
+.verdict .specs{display:flex;gap:18px;flex-wrap:wrap;font-size:.76rem;color:var(--ink2);border-top:1px dashed var(--line);padding-top:8px}
+.verdict .specs b{color:var(--ink);font-family:var(--mono)}
+.v-yes{border-left:4px solid var(--good)} .v-yes .badge{color:var(--good)}
+.v-likely{border-left:4px solid var(--accent)} .v-likely .badge{color:var(--accent2)}
+.v-caution{border-left:4px solid var(--warn)} .v-caution .badge{color:var(--warn)}
+.v-no{border-left:4px solid var(--bad)} .v-no .badge{color:var(--bad)}
+.v-unknown{border-left:4px solid var(--ink2)} .v-unknown .badge{color:var(--ink2)}
+.exp-meta{font-size:.82rem;color:var(--ink2)}
+.exp-meta b{color:var(--ink);font-family:var(--mono)}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:720px){.cols{grid-template-columns:1fr}}
+.col h3{font-size:.8rem;margin:0 0 8px;display:flex;align-items:center;gap:7px}
+.col h3 .dot{width:9px;height:9px;border-radius:50%}
+.list{display:flex;flex-direction:column;gap:7px;max-height:340px;overflow-y:auto}
+.item{display:flex;justify-content:space-between;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:8px 11px;cursor:pointer;font-size:.82rem}
+.item:hover{border-color:var(--accent)}
+.item .c{font-family:var(--mono);font-weight:600}
+.item .meta{font-size:.7rem;color:var(--ink2);font-family:var(--mono)}
+.item .b{font-size:.9rem}
+.empty{color:var(--ink2);font-size:.82rem;padding:14px;text-align:center}
+.legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px}
+.leg{display:flex;gap:9px;align-items:flex-start;font-size:.78rem;background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:10px 12px}
+.leg .bd{font-size:1rem;flex:none}
+.leg .t b{display:block}
+.leg .t span{color:var(--ink2)}
+.note{font-size:.76rem;color:var(--ink2);background:var(--soft);border:1px dashed var(--accent);border-radius:9px;padding:11px 14px}
+footer{color:var(--ink2);font-size:.74rem;text-align:center;padding-top:4px}
+</style>
+<div class="wrap"><div class="inner">
+  <div class="head-row">
+    <span class="eyebrow">李记包装 · 兼容性检查 — Compatibility</span>
+    <h1>这个能配那个吗？</h1>
+    <p class="lede">销售最常问"这个泵能不能配这个瓶 / 这个盖能不能配这个泵"。这里输两个编号立刻给结论 + 理由 + 置信度，
+       或选一个件看它能配套/能互换什么。判定逻辑：<b>人工确认 > 同套系 > 同口径 > 未知</b>。</p>
+    <div class="statline">
+      <span class="pill"><b id="s-n"></b> 个件建了接口指纹</span>
+      <span class="pill">同套系可配套 <b id="s-series"></b> 对</span>
+      <span class="pill">同口径可互换 <b id="s-sub"></b> 对</span>
+      <span class="pill">已解析牙口 <b id="s-neck"></b> 个</span>
+    </div>
+  </div>
+
+  <datalist id="allcodes"></datalist>
+
+  <!-- 配对检查 -->
+  <section class="card">
+    <h2>① 配对检查 <span class="k">A ⇄ B</span></h2>
+    <div class="body">
+      <div class="pair">
+        <label class="f">件 A <input id="pa" list="allcodes" placeholder="如 CC20945" autocomplete="off"></label>
+        <span class="vs">⇄</span>
+        <label class="f">件 B <input id="pb" list="allcodes" placeholder="如 CC20831" autocomplete="off"></label>
+      </div>
+      <div id="verdict"></div>
+    </div>
+  </section>
+
+  <!-- 单件浏览 -->
+  <section class="card">
+    <h2>② 看一个件能配什么 <span class="k">FITS</span></h2>
+    <div class="body">
+      <label class="f">选一个件<input id="exp" list="allcodes" placeholder="如 CC20945，看它的配套 / 互换件" autocomplete="off"></label>
+      <div class="exp-meta" id="exp-meta"></div>
+      <div class="cols">
+        <div class="col"><h3><span class="dot" style="background:var(--good)"></span>同套系可配套（设计配套 · 高可信）</h3>
+          <div class="list" id="companions"></div></div>
+        <div class="col"><h3><span class="dot" style="background:var(--accent)"></span>同口径可互换（牙型待核对 · 中可信）</h3>
+          <div class="list" id="subs"></div></div>
+      </div>
+      <div class="note">点任意一个件，会自动填到上面①做配对检查。灰色「未知」的件目前缺牙口数据——正是要跟李记补的部分（显式牙口仅覆盖约 7%）。</div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>判定说明 <span class="k">LEGEND</span></h2>
+    <div class="body"><div class="legend">
+      <div class="leg"><span class="bd">✅</span><span class="t"><b>兼容</b><span>同套系，设计上就配好的</span></span></div>
+      <div class="leg"><span class="bd">🟡</span><span class="t"><b>大概率兼容</b><span>同口径，接口能互换（牙型 410/415 待确认）</span></span></div>
+      <div class="leg"><span class="bd">⚠️</span><span class="t"><b>需确认</b><span>同套系但口径不同——套系里含多规格</span></span></div>
+      <div class="leg"><span class="bd">❌</span><span class="t"><b>不兼容</b><span>口径不同，拧不上</span></span></div>
+      <div class="leg"><span class="bd">❔</span><span class="t"><b>未知</b><span>缺牙口数据，需人工确认（可沉淀成规则）</span></span></div>
+    </div></div>
+  </section>
+  <footer>逻辑与 compat.py 一致 · 全部前端计算 · 自包含离线可用 · 阶段4 兼容性骨架</footer>
+</div></div>
+<script>
+const DB = {"parts":{"CC20945":{"r":"pump","n":20,"f":"20/410;20牙","s":["H498","H533","H558","H571"],"v":"120ML;120ml"},"CC20724B":{"r":"pump","n":20,"f":"20/410;20牙","s":["H486","H498","H506","H533","H558","H571"],"v":"100ML;100ml;90ML;90ml"},"CC20865":{"r":"pump","n":20,"f":"20/410;20牙","s":["H498","H506","H533","H558","H571"],"v":"40ML;40ml"},"CC20858":{"r":"pump","n":20,"f":"18牙;20/410;20牙","s":["H498","H506","H533","H558","H571"],"v":"30ML"},"CC20793":{"r":"pump","n":18,"f":"18牙","s":["H533"],"v":"30ML;30ml"},"CA10502":{"r":"cap","n":null,"f":null,"s":["H498","H502","H506","H517","H533","H567","H570","H571","H614"],"v":null},"CA10526":{"r":"cap","n":null,"f":null,"s":["H498","H533","H567","H570","H571"],"v":null},"CC20831":{"r":"pump","n":20,"f":"20/410","s":["H517","H554","H567"],"v":"120ML;120ml"},"CC20830":{"r":"pump","n":20,"f":"20/410","s":["H517","H554","H567"],"v":"100ml"},"CC20827":{"r":"pump","n":20,"f":"20/410","s":["H489","H517","H554","H567"],"v":"35ML;35ml;40ml"},"CA10498":{"r":"cap","n":null,"f":null,"s":["H489","H554","H558","H569"],"v":null},"CA10492":{"r":"cap","n":null,"f":null,"s":["H489","H554","H558","H569"],"v":null},"CC21033 CC21032":{"r":"cover","n":null,"f":null,"s":["H574"],"v":"100ML;120ML"},"CC21031":{"r":"cover","n":null,"f":null,"s":["H574"],"v":"40ML"},"CA10567":{"r":"cap","n":null,"f":null,"s":["H574"],"v":null},"CC20885":{"r":"dropper","n":null,"f":null,"s":["H574"],"v":"30ML"},"CA10479":{"r":"cap","n":null,"f":null,"s":["H582"],"v":null},"CA10480":{"r":"cap","n":null,"f":null,"s":["H582"],"v":null},"CC20803 CC20802":{"r":"cover","n":null,"f":null,"s":["H582"],"v":"40ml;60ml"},"CC20974":{"r":"cover","n":null,"f":null,"s":["H582"],"v":"100ml"},"CC20832":{"r":"cap","n":null,"f":null,"s":["H582"],"v":"120ml"},"CC20141":{"r":"cap","n":null,"f":null,"s":["H347"],"v":"120ML"},"CC20140":{"r":"cap","n":null,"f":null,"s":["H347"],"v":"100ML"},"CC20173":{"r":"pump","n":null,"f":null,"s":["H347"],"v":"60ML"},"CC20116":{"r":"pump","n":null,"f":null,"s":["H347"],"v":"40ML"},"CC20198":{"r":"pump","n":null,"f":null,"s":["H347"],"v":"30ML"},"CA10363":{"r":"cap","n":null,"f":null,"s":["H347","H422"],"v":null},"CA10377":{"r":"cap","n":null,"f":null,"s":["H347","H422"],"v":null},"CA10294B":{"r":"cap","n":null,"f":null,"s":["H347","H422","H499","H561","H562"],"v":null},"CC20396":{"r":"cap","n":null,"f":null,"s":["H355"],"v":"130ML"},"CC20395":{"r":"pump","n":null,"f":null,"s":["H355"],"v":"100ml"},"CC20394":{"r":"pump","n":null,"f":null,"s":["H355"],"v":"40ml"},"CA10299":{"r":"cap","n":null,"f":null,"s":["H355","H409"],"v":null},"CH1853B":{"r":"cap","n":null,"f":null,"s":["H185"],"v":"120ML"},"CH1106B":{"r":"cap","n":null,"f":null,"s":["H110"],"v":null},"CH1555B":{"r":"cover","n":null,"f":null,"s":["H155"],"v":"100ML"},"CH0902B":{"r":"cover","n":null,"f":null,"s":["H090"],"v":"40ML"},"CC20788":{"r":"cap","n":null,"f":null,"s":["H373","H408","H410","H585"],"v":"140ML;140ml"},"CC20723":{"r":"cover","n":null,"f":null,"s":["H373","H408","H410"],"v":"90ml"},"CC20679":{"r":"cover","n":null,"f":null,"s":["H373","H408"],"v":"45ml"},"CA10436":{"r":"cap","n":null,"f":null,"s":["H373","H408"],"v":null},"CC20454":{"r":"pump","n":null,"f":null,"s":["H376","H487"],"v":"130ML"},"CC20453":{"r":"pump","n":null,"f":null,"s":["H376","H487"],"v":"100ML"},"CC20683":{"r":"pump","n":null,"f":null,"s":["H376","H487"],"v":"30ML"},"CA10304":{"r":"cap","n":null,"f":null,"s":["H376"],"v":null},"CA10329":{"r":"cap","n":null,"f":null,"s":["H376"],"v":null},"CC20694":{"r":"pump","n":null,"f":null,"s":["H378"],"v":"110ml"},"CC20721":{"r":"pump","n":null,"f":null,"s":["H378"],"v":"60ml"},"CC20693":{"r":"pump","n":null,"f":null,"s":["H378"],"v":"40ml"},"CC20692":{"r":"dropper","n":null,"f":null,"s":["H378"],"v":"30ml"},"CA10440":{"r":"cap","n":null,"f":null,"s":["H378"],"v":null},"CA10439":{"r":"cap","n":null,"f":null,"s":["H378"],"v":null},"CA10441":{"r":"cap","n":null,"f":null,"s":["H381","H529","H613"],"v":null},"CA10442":{"r":"cap","n":null,"f":null,"s":["H381"],"v":null},"CC20695":{"r":"cover","n":null,"f":null,"s":["H381"],"v":"30ML"},"CC20696":{"r":"cover","n":null,"f":null,"s":["H381"],"v":"100ML"},"CC20697":{"r":"cap","n":null,"f":null,"s":["H381","H529","H537","H613"],"v":"120ml"},"CC20555":{"r":"cap","n":null,"f":null,"s":["H382"],"v":"120ml"},"CC20726":{"r":"cap","n":null,"f":null,"s":["H382"],"v":"80ml"},"CC20725":{"r":"cap","n":null,"f":null,"s":["H382"],"v":"30ml"},"CC20265":{"r":"cap","n":null,"f":null,"s":["H382"],"v":"50ml"},"CA10201":{"r":"cap","n":null,"f":null,"s":["H382"],"v":null},"CA10202":{"r":"cap","n":null,"f":null,"s":["H382"],"v":null},"CA10199":{"r":"cap","n":null,"f":null,"s":["H382"],"v":null},"CA10198":{"r":"cap","n":null,"f":null,"s":["H382"],"v":null},"CC20719":{"r":"pump","n":null,"f":null,"s":["H383"],"v":"130ml"},"CC20521":{"r":"pump","n":null,"f":null,"s":["H383"],"v":"100ml"},"CA10449":{"r":"sleeve","n":null,"f":null,"s":["H383","H384","H484","H493","H524"],"v":null},"CC20720":{"r":"pump","n":null,"f":null,"s":["H384"],"v":"150ml"},"CC20805":{"r":"cap","n":null,"f":null,"s":["H385"],"v":"150ML"},"CC20810":{"r":"cap","n":null,"f":null,"s":["H385"],"v":"120ML"},"CC20508":{"r":"cover","n":null,"f":null,"s":["H385"],"v":"100ml"},"CC20631":{"r":"cover","n":null,"f":null,"s":["H385","H410"],"v":"40ml"},"CA10284":{"r":"cap","n":null,"f":null,"s":["H385","H410"],"v":null},"CA10283":{"r":"cap","n":null,"f":null,"s":["H385","H410"],"v":null},"CC20569":{"r":"cap","n":null,"f":null,"s":["H386"],"v":"150ML"},"CC20568":{"r":"cap","n":null,"f":null,"s":["H386"],"v":"120ML"},"CC20567":{"r":"pump","n":null,"f":null,"s":["H386"],"v":"100ML"},"CC20566":{"r":"pump","n":null,"f":null,"s":["H386"],"v":"40ML"},"CA10229":{"r":"cap","n":null,"f":null,"s":["H386"],"v":null},"CA10386":{"r":"cap","n":null,"f":null,"s":["H386"],"v":null},"CA10385":{"r":"cap","n":null,"f":null,"s":["H386"],"v":null},"CC20738":{"r":"cap","n":null,"f":null,"s":["H388"],"v":"120ML"},"CC20716":{"r":"cover","n":null,"f":null,"s":["H388"],"v":"100ML"},"CA10453":{"r":"cap","n":null,"f":null,"s":["H388","H508"],"v":null},"CA10451":{"r":"cap","n":null,"f":null,"s":["H392"],"v":null},"CA10450":{"r":"cap","n":null,"f":null,"s":["H392"],"v":null},"CC20734":{"r":"cover","n":null,"f":null,"s":["H392"],"v":"130ML"},"CC20733":{"r":"cover","n":null,"f":null,"s":["H392"],"v":"100ML"},"CC20732":{"r":"cover","n":null,"f":null,"s":["H392"],"v":"40ML"},"CC20730":{"r":"pump","n":null,"f":null,"s":["H398"],"v":"120ML"},"CC20728":{"r":"pump","n":null,"f":null,"s":["H398"],"v":"100ML"},"CC20727":{"r":"pump","n":null,"f":null,"s":["H398"],"v":"40ML"},"CA10452":{"r":"cap","n":null,"f":null,"s":["H398"],"v":null},"CC20718":{"r":"cap","n":null,"f":null,"s":["H409","H504"],"v":"120ML;130ml"},"CC20711":{"r":"pump","n":null,"f":null,"s":["H409","H504"],"v":"100ml;90ml"},"CC20717":{"r":"pump","n":null,"f":null,"s":["H409","H504"],"v":"30ml;35ml"},"CC20787":{"r":"cap","n":null,"f":null,"s":["H410"],"v":"110ML"},"CC20843":{"r":"cap","n":null,"f":null,"s":["H422"],"v":"110ML"},"CC20842":{"r":"cap","n":null,"f":null,"s":["H422"],"v":"90ML"},"CC20685":{"r":"pump","n":20,"f":"20/410","s":["H422","H486","H506","H614"],"v":"50ML;50ml"},"CC20684":{"r":"pump","n":20,"f":"20/410","s":["H422","H486","H506"],"v":"30ML;30ml"},"CC20748":{"r":"cap","n":null,"f":null,"s":["H423"],"v":"120ML"},"CA10459":{"r":"cap","n":null,"f":null,"s":["H423","H482"],"v":null},"CC20747":{"r":"cover","n":null,"f":null,"s":["H423"],"v":"100ML"},"CC20746":{"r":"cover","n":null,"f":null,"s":["H423"],"v":"40ML"},"CC20767/CC20729":{"r":"cap","n":null,"f":null,"s":["H429"],"v":"120ML;135ML"},"CC20320":{"r":"pump","n":null,"f":null,"s":["H429"],"v":"100ml"},"CC20300":{"r":"pump","n":null,"f":null,"s":["H429"],"v":"40ml"},"CA10468/CA10236":{"r":"cap","n":null,"f":null,"s":["H429"],"v":null},"CA10234":{"r":"cap","n":null,"f":null,"s":["H429","H538","H546"],"v":null},"CC20758":{"r":"cap","n":null,"f":null,"s":["H431","H527","H543"],"v":"120ML;120ml"},"CC20756":{"r":"cap","n":null,"f":null,"s":["H431","H527","H543"],"v":"100ML;100ml"},"CC20755":{"r":"cap","n":null,"f":null,"s":["H431","H527","H543"],"v":"40ML;40ml"},"CA10463":{"r":"cap","n":null,"f":null,"s":["H431","H527"],"v":null},"CA10473":{"r":"cap","n":null,"f":null,"s":["H431","H527"],"v":null},"CC20445":{"r":"cap","n":null,"f":null,"s":["H436"],"v":"120ml"},"CC20768":{"r":"cover","n":null,"f":null,"s":["H436"],"v":"100ML"},"CC20089":{"r":"cover","n":null,"f":null,"s":["H436"],"v":"30ml"},"CA10457":{"r":"cap","n":null,"f":null,"s":["H436","H591"],"v":null},"CA10339":{"r":"cap","n":null,"f":null,"s":["H436"],"v":null},"CC20794":{"r":"cap","n":null,"f":null,"s":["H455","H485","H555","H564","H602","H610"],"v":"150ML;150ml"},"CC20795":{"r":"pump","n":null,"f":null,"s":["H455","H485","H555","H564"],"v":"120ML;120ml"},"CC20841":{"r":"pump","n":null,"f":null,"s":["H455","H485","H555","H564"],"v":"35ml;40ML;40ml"},"CA10476":{"r":"cap","n":null,"f":null,"s":["H455","H485","H555","H564"],"v":null},"CC20799":{"r":"cap","n":null,"f":null,"s":["H461"],"v":"130ML"},"CC20789":{"r":"pump","n":null,"f":null,"s":["H461"],"v":"100ml"},"CC20790":{"r":"pump","n":null,"f":null,"s":["H461"],"v":"30ml"},"CA10478":{"r":"cap","n":null,"f":null,"s":["H461"],"v":null},"CC20835":{"r":"pump","n":null,"f":null,"s":["H481"],"v":"120ML"},"CC20836":{"r":"pump","n":null,"f":null,"s":["H481"],"v":"100ML"},"CC20833":{"r":"pump","n":null,"f":null,"s":["H481"],"v":"40ML"},"CA10494":{"r":"sleeve","n":null,"f":null,"s":["H481"],"v":null},"CC20840 CC20839":{"r":"cap","n":null,"f":null,"s":["H482"],"v":"120ML"},"CC20838 CC20848":{"r":"cover","n":null,"f":null,"s":["H482"],"v":"100ML;40ML"},"CA10404":{"r":"liner","n":null,"f":null,"s":["H483"],"v":null},"CC20605":{"r":"liner","n":null,"f":null,"s":["H483"],"v":"120ml"},"CC20604":{"r":"cover","n":null,"f":null,"s":["H483"],"v":"100ml"},"CC20603":{"r":"cover","n":null,"f":null,"s":["H483"],"v":"40ml"},"CC20819":{"r":"cap","n":22,"f":"22/410","s":["H484","H486","H502","H506","H513","H530"],"v":"150ML;150ml"},"CC20818":{"r":"cap","n":null,"f":null,"s":["H484","H486","H502","H506","H513","H530"],"v":"120ML;120ml"},"CC20521B":{"r":"pump","n":null,"f":null,"s":["H484"],"v":"100ML"},"CC20495B":{"r":"pump","n":null,"f":null,"s":["H484"],"v":"60ML"},"CC20507B":{"r":"pump","n":null,"f":null,"s":["H484"],"v":"40ML"},"CC20754":{"r":"dropper","n":null,"f":null,"s":["H485","H555","H564"],"v":"45ML;45ml"},"CA10488":{"r":"cap","n":null,"f":null,"s":["H486","H616"],"v":null},"CA10490":{"r":"cap","n":null,"f":null,"s":["H486"],"v":null},"CA10311":{"r":"cap","n":null,"f":null,"s":["H487"],"v":null},"CC20800":{"r":"cover","n":null,"f":null,"s":["H493","H524"],"v":"120ml"},"CC20801":{"r":"cover","n":null,"f":null,"s":["H493","H524"],"v":"100ml"},"CC20610":{"r":"dropper","n":null,"f":null,"s":["H493","H524"],"v":"30ML;30ml"},"CC20673":{"r":"cover","n":null,"f":null,"s":["H499"],"v":"120ml"},"CC20674":{"r":"cover","n":null,"f":null,"s":["H499"],"v":"100ml"},"CC20804":{"r":"cover","n":null,"f":null,"s":["H499","H502","H513","H530"],"v":"40ML;40ml"},"CA10539 CA10530":{"r":"cap","n":null,"f":null,"s":["H500","H583"],"v":"120ML;30ML;50ML;80ML"},"CC20890":{"r":"cover","n":null,"f":null,"s":["H501"],"v":"110ml"},"CC20889":{"r":"cover","n":null,"f":null,"s":["H501"],"v":"40ml"},"CA10504":{"r":"cap","n":null,"f":null,"s":["H501"],"v":null},"CA10529":{"r":"cap","n":null,"f":null,"s":["H501"],"v":null},"CA10301B":{"r":"cap","n":null,"f":null,"s":["H502"],"v":null},"CA10373/CA10299":{"r":"cap","n":null,"f":null,"s":["H504"],"v":null},"CA10298":{"r":"cap","n":null,"f":null,"s":["H504"],"v":null},"CA10503":{"r":"cap","n":null,"f":null,"s":["H507"],"v":null},"CC20883":{"r":"cap","n":null,"f":null,"s":["H507"],"v":"120ml"},"CC20888":{"r":"cap","n":null,"f":null,"s":["H507"],"v":"100ml"},"CC20887":{"r":"cap","n":null,"f":null,"s":["H507"],"v":"40ml"},"CC20886":{"r":"cap","n":null,"f":null,"s":["H508","H591"],"v":"30ML"},"CC20884":{"r":"cap","n":null,"f":null,"s":["H508","H591"],"v":"100ML"},"CC20882":{"r":"cap","n":null,"f":null,"s":["H508","H591"],"v":"120ML"},"CC20894":{"r":"pump","n":null,"f":null,"s":["H509","H510","H511"],"v":"120ml"},"CC20893":{"r":"pump","n":null,"f":null,"s":["H509","H510","H511"],"v":"100ml"},"CC20907":{"r":"pump","n":null,"f":null,"s":["H509","H510","H511"],"v":"30ml"},"CA10507":{"r":"cap","n":null,"f":null,"s":["H509","H510","H511"],"v":null},"CC20908":{"r":"cap","n":null,"f":null,"s":["H512"],"v":"120ml"},"CA10468":{"r":"cap","n":null,"f":null,"s":["H512","H538","H546"],"v":null},"CC20892":{"r":"cover","n":null,"f":null,"s":["H512"],"v":"100ml"},"CC20891":{"r":"cover","n":null,"f":null,"s":["H512"],"v":"50ml"},"CC20898":{"r":"cover","n":null,"f":null,"s":["H512"],"v":"30ml"},"CA10238":{"r":"cap","n":null,"f":null,"s":["H513"],"v":null},"CA10513":{"r":"cap","n":null,"f":null,"s":["H518"],"v":null},"CC20910":{"r":"cap","n":null,"f":null,"s":["H518"],"v":"140ml"},"CC20918":{"r":"cover","n":20,"f":"20口径","s":["H520","H547"],"v":"120ml"},"CC20917":{"r":"cover","n":20,"f":"20口径","s":["H520","H547"],"v":"100ml"},"CC20916":{"r":"cover","n":18,"f":"18口径","s":["H520","H547"],"v":"40ml"},"CC20926":{"r":"sleeve","n":null,"f":null,"s":["H520"],"v":"30ml"},"CA10519":{"r":"cap","n":null,"f":null,"s":["H520","H547"],"v":null},"CA10520":{"r":"cap","n":null,"f":null,"s":["H520","H547"],"v":null},"SH2021":{"r":"cap","n":null,"f":null,"s":["H202"],"v":"150ml"},"SH2020":{"r":"pump","n":20,"f":"20口牙","s":["H202"],"v":"100ml;120ml"},"SH2019":{"r":"cover","n":20,"f":"20口牙","s":["H201"],"v":"40ml"},"SH1002":{"r":"cap","n":null,"f":null,"s":["H100"],"v":null},"CC20923A":{"r":"cap","n":null,"f":null,"s":["H522"],"v":"120ml"},"CC20922A":{"r":"pump","n":null,"f":null,"s":["H522"],"v":"100ml"},"CC20921A":{"r":"pump","n":null,"f":null,"s":["H522"],"v":"40ml"},"CA10522A":{"r":"cap","n":null,"f":null,"s":["H522"],"v":null},"CC20819 CC20818 CC20955":{"r":"cap","n":22,"f":"18牙;22口牙","s":["H100","H525","H542","H561","H562","H576","H593","H616","H626"],"v":"100ML;100ml;120ML;120ml;150ml;20ml;30ml;40ML;40ml;50ml;90ML;90ml"},"CC20685 CC20684 CC20778":{"r":"pump","n":null,"f":null,"s":["H525"],"v":"20ml;30ml;50ml"},"CA10541":{"r":"cap","n":null,"f":null,"s":["H525","H566","H597"],"v":null},"A10542 SH1005":{"r":"cap","n":null,"f":null,"s":["H100"],"v":null},"CC20934":{"r":"cap","n":null,"f":null,"s":["H528","H534","H535","H540","H565","H595"],"v":"130ml;150ml"},"CC20931":{"r":"pump","n":null,"f":null,"s":["H528","H534","H535","H540","H565","H595"],"v":"100ml;120ml"},"CC20930":{"r":"pump","n":null,"f":null,"s":["H528","H534","H535","H540","H546","H565","H595"],"v":"35ml;40ML;40ml"},"CA10532":{"r":"cap","n":null,"f":null,"s":["H528","H534","H565","H595"],"v":null},"CA10534":{"r":"cap","n":null,"f":null,"s":["H528","H565","H595"],"v":null},"CA10535":{"r":"cap","n":null,"f":null,"s":["H528","H565","H595"],"v":null},"CC20696B/ CC20695B":{"r":"cover","n":null,"f":null,"s":["H529"],"v":"110ml;30ml"},"CA10533":{"r":"cap","n":null,"f":null,"s":["H530","H614"],"v":null},"CA10363/ CA10377":{"r":"cap","n":null,"f":null,"s":["H530"],"v":null},"CC20904":{"r":"cap","n":null,"f":null,"s":["H532"],"v":"120ML"},"CC20900":{"r":"cover","n":null,"f":null,"s":["H532"],"v":"100ML"},"CC20899":{"r":"cover","n":null,"f":null,"s":["H532"],"v":"30ML"},"CA10510":{"r":"cap","n":null,"f":null,"s":["H532"],"v":null},"CA10534/ CA10535":{"r":"cap","n":null,"f":null,"s":["H534"],"v":null},"CA10538":{"r":"cap","n":null,"f":null,"s":["H535","H540"],"v":null},"CA10441 CA10549":{"r":"cap","n":null,"f":null,"s":["H537"],"v":null},"CC20696 CC20695":{"r":"cap","n":null,"f":null,"s":["H537"],"v":"110ml;30ml"},"CC20425":{"r":"cap","n":null,"f":null,"s":["H538","H539"],"v":"130ML;130ml"},"CB20130":{"r":"cover","n":null,"f":null,"s":["H538","H539"],"v":"110ML;110ml"},"CC20506 CC20150":{"r":"cover","n":null,"f":null,"s":["H538","H585"],"v":"30ML;30ml;40ml"},"CC20506":{"r":"pump","n":null,"f":null,"s":["H539"],"v":"40ML"},"CC20150":{"r":"pump","n":null,"f":null,"s":["H539"],"v":"30ML"},"CA10499":{"r":"cap","n":null,"f":null,"s":["H539","H563"],"v":null},"CA10241":{"r":"cap","n":null,"f":null,"s":["H539","H563"],"v":null},"CA10550":{"r":"cap","n":null,"f":null,"s":["H541","H572"],"v":null},"CA10502 CA10526":{"r":"cap","n":null,"f":null,"s":["H542","H548","H550","H573","H576","H584","H587","H588","H589","H593","H598","H605","H616","H626"],"v":"30ml;40ML;40ml;50ml"},"CC20865 CC20858":{"r":"cap","n":20,"f":"20口牙","s":["H542","H614"],"v":"30ml;40ml"},"CA10463 CA10473":{"r":"cap","n":null,"f":null,"s":["H543"],"v":null},"CC20934 CC20931":{"r":"cap","n":null,"f":null,"s":["H546"],"v":"120ML;130ML"},"CC20831 CC20830 CC20827":{"r":"cover","n":20,"f":"20口径","s":["H550"],"v":"100ml;120ml;40ml"},"CA10030":{"r":"cap","n":null,"f":null,"s":[],"v":null},"CA10060":{"r":"cap","n":null,"f":null,"s":[],"v":null},"CA10233":{"r":"cap","n":null,"f":null,"s":[],"v":null},"CA10270":{"r":"cap","n":null,"f":null,"s":["H175"],"v":null},"CA10271":{"r":"cap","n":null,"f":null,"s":["H175"],"v":null},"CA10475":{"r":"cap","n":null,"f":null,"s":[],"v":null},"CA10485":{"r":"cap","n":null,"f":null,"s":[],"v":null},"CA10486 CA10495 CA10496":{"r":"cap","n":null,"f":null,"s":[],"v":null},"CA10493":{"r":"cap","n":null,"f":null,"s":[],"v":"150ML"},"CA10537":{"r":"cap","n":null,"f":null,"s":[],"v":null},"CA10539/ CA10530":{"r":"cap","n":null,"f":null,"s":[],"v":null},"CA10540":{"r":"cap","n":null,"f":null,"s":[],"v":null},"CA10544":{"r":"cap","n":null,"f":null,"s":[],"v":null},"CC20382":{"r":"pump","n":null,"f":null,"s":[],"v":"30ML"},"CC20383 CC20450":{"r":"pump","n":null,"f":null,"s":[],"v":"40ML"},"CC20548":{"r":"dropper","n":null,"f":null,"s":[],"v":null},"CC20579":{"r":"cover","n":null,"f":null,"s":[],"v":"30ML"},"CC20573":{"r":"cover","n":null,"f":null,"s":[],"v":"30ML"},"CC20791":{"r":"cover","n":null,"f":null,"s":[],"v":"30ML"},"CC20556":{"r":"pump","n":null,"f":null,"s":[],"v":"30ML"},"CC20579B":{"r":"pump","n":null,"f":null,"s":[],"v":null},"CC20618":{"r":"dropper","n":null,"f":null,"s":[],"v":"30ml"},"CC20637 CC20793 CC20856":{"r":"dropper","n":18,"f":"18牙","s":[],"v":"40ML"},"CC20659":{"r":"dropper","n":null,"f":null,"s":["H316"],"v":"30ML"},"CC20596 CC20659":{"r":"dropper","n":20,"f":"20牙","s":[],"v":"15ML;30ML"},"CC20814":{"r":"cap","n":null,"f":null,"s":["H616"],"v":"230ml"},"CC20816":{"r":"cap","n":null,"f":null,"s":[],"v":"200ml"},"CC20909":{"r":"cap","n":null,"f":null,"s":["H561","H562","H616"],"v":"200ML;200ml"},"CC20837":{"r":"cover","n":null,"f":null,"s":[],"v":"40ML"},"CC20847":{"r":"cover","n":null,"f":null,"s":[],"v":"30ML"},"CC20853":{"r":"dropper","n":null,"f":null,"s":[],"v":"20ML"},"CC20855 CC20854":{"r":"pump","n":18,"f":"18/410","s":[],"v":"20ML;30ML"},"CC20911":{"r":"sleeve","n":null,"f":null,"s":[],"v":"30ml"},"SH2002 CC20975":{"r":"cover","n":null,"f":null,"s":["H200"],"v":"30ML"},"SH2009 19-A-5":{"r":"pump","n":null,"f":null,"s":["H200"],"v":"30ML"},"SH2010":{"r":"cover","n":null,"f":null,"s":["H201"],"v":"30ML"},"001-02H":{"r":"pump","n":null,"f":null,"s":[],"v":null},"CA10574 CA10571 CA10572":{"r":"cap","n":null,"f":null,"s":[],"v":null},"CA10597":{"r":"cap","n":null,"f":null,"s":[],"v":"165ml"},"LB873# CC20695":{"r":"cover","n":null,"f":null,"s":["H552"],"v":"30ml"},"LB874# CC20696":{"r":"cover","n":null,"f":null,"s":["H552"],"v":"110ml"},"LB875# CA10441":{"r":"cap","n":null,"f":null,"s":["H552"],"v":null},"LB876# CA10442":{"r":"cap","n":null,"f":null,"s":["H552"],"v":null},"LB878# CC20697":{"r":"cap","n":null,"f":null,"s":["H552"],"v":"120ml"},"CC20987":{"r":"cover","n":null,"f":null,"s":["H558","H571"],"v":"120ml"},"CC21002":{"r":"cover","n":null,"f":null,"s":["H558","H571"],"v":"100ml"},"CC20831B":{"r":"cover","n":null,"f":null,"s":["H489"],"v":"120ml"},"CC20830B":{"r":"cover","n":null,"f":null,"s":["H489"],"v":"100ml"},"CC20814B":{"r":"cap","n":null,"f":null,"s":["H562"],"v":"230ml"},"CC206974":{"r":"cap","n":null,"f":null,"s":["H563"],"v":"120ml"},"CC20696B":{"r":"cover","n":null,"f":null,"s":["H563","H613"],"v":"100ml"},"CC20695B":{"r":"cover","n":null,"f":null,"s":["H563","H613"],"v":"30ML;30ml"},"CA10533 CA10488 CA10546":{"r":"cap","n":null,"f":null,"s":["H566"],"v":null},"CA10542 SH1005":{"r":"cap","n":null,"f":null,"s":["H100"],"v":null},"CC20819 CC20818":{"r":"cap","n":22,"f":"22/410","s":["H100","H605"],"v":"120ML;120ml;150ML;150ml"},"CC20955":{"r":"cover","n":null,"f":null,"s":["H100"],"v":"100ml;20ml;30ml;40ml;50ml"},"CC20831C":{"r":"cover","n":null,"f":null,"s":["H569","H570"],"v":"120ml"},"CC20830C":{"r":"cover","n":null,"f":null,"s":["H569","H570"],"v":"100ml"},"CC20827B":{"r":"cover","n":null,"f":null,"s":["H569","H570"],"v":"40ml"},"CC20996":{"r":"cap","n":null,"f":null,"s":["H572"],"v":"120ml"},"CC20995":{"r":"cover","n":null,"f":null,"s":["H572"],"v":"40ml"},"CC20874":{"r":"cap","n":null,"f":null,"s":["H576","H587","H593"],"v":"100ml;120ml;150ml;30ml;40ml;50ml;90ml"},"CC20685C CC20684C CC20778B":{"r":"pump","n":null,"f":null,"s":["H576"],"v":"20ML;30ML;50ML"},"CC21059 CC21054":{"r":"cover","n":null,"f":null,"s":["H578"],"v":"100ml;120ml"},"CC21053":{"r":"cover","n":null,"f":null,"s":["H578"],"v":"40ml"},"CA10576":{"r":"cap","n":null,"f":null,"s":["H578"],"v":null},"CA10575":{"r":"cap","n":null,"f":null,"s":["H578"],"v":null},"CC20462":{"r":"cap","n":null,"f":null,"s":["H579"],"v":"120ml"},"CC20461":{"r":"pump","n":null,"f":null,"s":["H579"],"v":"100ml"},"DX2001":{"r":"pump","n":null,"f":null,"s":["H579"],"v":"40ML"},"CA10419":{"r":"cap","n":null,"f":null,"s":["H579"],"v":null},"CA10438":{"r":"cap","n":null,"f":null,"s":["H579"],"v":null},"CA10572":{"r":"cap","n":null,"f":null,"s":["H583"],"v":"15ML"},"CA10571":{"r":"cap","n":null,"f":null,"s":["H583"],"v":"30ML"},"CA10574":{"r":"cap","n":null,"f":null,"s":["H583"],"v":"50ML"},"CA10559":{"r":"cap","n":null,"f":null,"s":["H583"],"v":null},"CC20950":{"r":"cap","n":null,"f":null,"s":["H584"],"v":"150ml"},"CC20987 CC20989":{"r":"cover","n":null,"f":null,"s":["H584"],"v":"120ml;40ml"},"CC20425 CB20130":{"r":"pump","n":null,"f":null,"s":["H585"],"v":"110ml;130ml"},"CA10353":{"r":"cap","n":null,"f":null,"s":["H585"],"v":null},"CA10352":{"r":"cap","n":null,"f":null,"s":["H585"],"v":null},"CA10584":{"r":"cap","n":null,"f":null,"s":["H585"],"v":null},"BW1920":{"r":"cap","n":null,"f":null,"s":["H586"],"v":null},"CA10595":{"r":"cap","n":null,"f":null,"s":["H591","H624","H625"],"v":null},"CA10594":{"r":"cap","n":null,"f":null,"s":["H591"],"v":null},"CC20886 CC20884":{"r":"pump","n":null,"f":null,"s":["H591"],"v":"100ml;30ml"},"CA10533 CA10546":{"r":"cap","n":null,"f":null,"s":["H597"],"v":null},"CA10542 JH1005":{"r":"cap","n":null,"f":null,"s":["H100"],"v":null},"CC20818 CC20955":{"r":"cap","n":null,"f":null,"s":["H598"],"v":"100ml;120ml"},"CC20955 CC20865 CC20858":{"r":"cover","n":null,"f":null,"s":["H598"],"v":"100ml;30ml;40ml"},"CA10294B CA10561":{"r":"cap","n":null,"f":null,"s":["H599","H600","H603"],"v":null},"CC20831C CC20830C CC20827B":{"r":"cover","n":null,"f":null,"s":["H600"],"v":"100ml;120ML;40ml"},"CC20795 CC32001 CC20841":{"r":"cover","n":null,"f":null,"s":["H602"],"v":"100ML;120ml;40ML"},"CA10476 CA31001":{"r":"cap","n":null,"f":null,"s":["H602","H610"],"v":null},"CC20724B CC20865 CC20858":{"r":"cover","n":20,"f":"20/410","s":["H605"],"v":"100ml;30ML;40ml"},"CC20684 CC20685":{"r":"cover","n":20,"f":"20/410","s":["H605"],"v":"30ml;50ML"},"CC21090":{"r":"cap","n":20,"f":"20牙","s":["H606","H607"],"v":"120ML;30ML;80ML;90ML"},"CC21038 CC21037":{"r":"pump","n":null,"f":null,"s":["H606"],"v":"80ML;90ML"},"CC21093":{"r":"pump","n":null,"f":null,"s":["H606"],"v":"20ML;30ML;50ML"},"CA10606 CA10605":{"r":"cap","n":null,"f":null,"s":["H606","H607"],"v":null},"CC20969 CC20970 CC20971":{"r":"pump","n":null,"f":null,"s":["H610"],"v":"10ml;20ml;30ml"},"CA10549":{"r":"cap","n":null,"f":null,"s":["H613"],"v":null},"CC21021":{"r":"cap","n":null,"f":null,"s":["H614","H616"],"v":"120ml"},"CC21003":{"r":"pump","n":null,"f":null,"s":["H614"],"v":"100ml"},"CC21003 CC21021":{"r":"pump","n":null,"f":null,"s":["H616"],"v":"100ml;120ml;25ML;30ML;30ml;40ML;40ml;50ml;60ML;90ml"},"CA10483 CA10363 CA10377":{"r":"cap","n":null,"f":null,"s":["H616"],"v":null},"CA10546 CA10533":{"r":"cap","n":null,"f":null,"s":["H616"],"v":null},"CA10032":{"r":"cap","n":null,"f":null,"s":["H616"],"v":null},"CA10052":{"r":"cap","n":null,"f":null,"s":["H616"],"v":null},"CA10073 CA10073B":{"r":"cap","n":null,"f":null,"s":["H616"],"v":null},"CA10073":{"r":"cap","n":null,"f":null,"s":["H616"],"v":null},"LB938#":{"r":"cover","n":null,"f":null,"s":["H622"],"v":"30ml;40ml"},"LB937#":{"r":"cover","n":null,"f":null,"s":["H622"],"v":"100ml;120ml"},"LB939# 三层盖":{"r":"cap","n":null,"f":null,"s":["H622"],"v":null},"LB940# 双层盖":{"r":"cap","n":null,"f":null,"s":["H622"],"v":null},"CA10618":{"r":"cap","n":null,"f":null,"s":["H624","H625"],"v":null},"CC21146":{"r":"cap","n":null,"f":null,"s":["H624","H625"],"v":"120ml"},"CC21148":{"r":"cover","n":null,"f":null,"s":["H624","H625"],"v":"100ml"},"CC21147":{"r":"cover","n":null,"f":null,"s":["H624","H625"],"v":"40ml"},"CC20685 CC20684":{"r":"pump","n":null,"f":null,"s":["H626"],"v":"30ml;50ml"},"LB944#":{"r":"cover","n":null,"f":null,"s":["H630"],"v":"30ml"},"LB945#":{"r":"cover","n":null,"f":null,"s":["H630"],"v":"100ml;120ml"},"LB946#A 三层盖":{"r":"cap","n":null,"f":null,"s":["H630"],"v":null},"LB946#B 双层盖":{"r":"cap","n":null,"f":null,"s":["H630"],"v":null}},"overrides":[],"stat":{"n":353,"series":1097,"sub":180,"neck":26}};
+const P = DB.parts;
+const RL = {pump:'泵头',cap:'盖',cover:'外罩',dropper:'滴管/滴泵',sleeve:'肩套',plug:'内塞',liner:'垫片',bottle:'瓶',other:'其他'};
+const $=id=>document.getElementById(id);
+$('s-n').textContent=DB.stat.n; $('s-series').textContent=DB.stat.series.toLocaleString();
+$('s-sub').textContent=DB.stat.sub; $('s-neck').textContent=DB.stat.neck;
+
+// datalist
+const codes=Object.keys(P).sort();
+const dl=$('allcodes');
+codes.forEach(c=>{const o=document.createElement('option');o.value=c;
+  o.label=`${RL[P[c].r]||P[c].r}${P[c].n?' · 口径'+P[c].n:''}${P[c].v?' · '+P[c].v:''}`;dl.appendChild(o);});
+
+function ovLookup(a,b){for(const o of DB.overrides){if((o[0]===a&&o[1]===b)||(o[0]===b&&o[1]===a))return o;}return null;}
+function resolve(a,b){
+  const sa=P[a],sb=P[b];
+  if(!sa||!sb)return{v:'unknown',c:'low',r:'编码不在库中（检查是否输错）'};
+  const o=ovLookup(a,b);
+  if(o)return{v:o[2]==='yes'?'yes':'no',c:'confirmed',r:`人工确认（${o[4]||'?'}）：${o[3]}`};
+  const common=sa.s.filter(x=>sb.s.includes(x));
+  const na=sa.n,nb=sb.n;
+  if(common.length&&na&&nb&&na!==nb)return{v:'caution',c:'medium',r:`同属套系 ${common.join('/')} 但口径不同（${na} vs ${nb}）——套系内不同规格的配件，需确认具体是哪一件`};
+  if(common.length)return{v:'yes',c:'high',r:`同套系 ${common.join('/')}（设计配套）`};
+  if(na&&nb){if(na===nb)return{v:'likely',c:'medium',r:`同口径 ${na}（${RL[sa.r]}↔${RL[sb.r]}，接口可互换；牙型 410/415 待核对）`};
+    return{v:'no',c:'medium',r:`口径不同：${na} vs ${nb}，无法互配`};}
+  return{v:'unknown',c:'low',r:'缺牙口数据，建议人工确认（可沉淀成规则）'};
+}
+const BADGE={yes:'✅ 兼容',likely:'🟡 大概率兼容',caution:'⚠️ 需确认',no:'❌ 不兼容',unknown:'❔ 未知'};
+function specLine(code){const s=P[code];if(!s)return '';
+  return `<b>${code}</b> · ${RL[s.r]||s.r} · 口径 ${s.n||'—'} · 套系 ${s.s.join('/')||'—'} · ${s.v||''}`;}
+
+function renderCheck(){
+  const a=$('pa').value.trim().toUpperCase(), b=$('pb').value.trim().toUpperCase();
+  const box=$('verdict');
+  if(!a||!b){box.innerHTML='<div class="empty">输入两个编号（或从下面②点选）后显示结论。</div>';return;}
+  const r=resolve(a,b);
+  box.innerHTML=`<div class="verdict v-${r.v}">
+     <div class="badge">${BADGE[r.v]}<span class="conf">置信度 ${r.c}</span></div>
+     <div class="reason">${r.r}</div>
+     <div class="specs"><span>${specLine(a)||('未找到 '+a)}</span><span>${specLine(b)||('未找到 '+b)}</span></div></div>`;
+}
+$('pa').addEventListener('input',renderCheck);
+$('pb').addEventListener('input',renderCheck);
+
+function renderExplore(){
+  const a=$('exp').value.trim().toUpperCase();
+  const s=P[a];
+  if(!s){$('exp-meta').textContent=a?('未找到编码 '+a):'';$('companions').innerHTML='';$('subs').innerHTML='';return;}
+  $('exp-meta').innerHTML=`已选 ${specLine(a)}`;
+  // 候选：同套系 companions + 同口径 subs
+  const comp=[],sub=[];
+  for(const code of codes){if(code===a)continue;const t=P[code];
+    if(t.s.some(x=>s.s.includes(x))) comp.push(code);
+    if(s.n&&t.n===s.n) sub.push(code);}
+  const card=(code)=>{const r=resolve(a,code);const t=P[code];
+    return `<div class="item" data-code="${code}"><span><span class="c">${code}</span>
+      <span class="meta"> ${RL[t.r]||t.r}${t.n?' · 口径'+t.n:''}${t.v?' · '+t.v:''}</span></span>
+      <span class="b" title="${r.r}">${BADGE[r.v].split(' ')[0]}</span></div>`;};
+  $('companions').innerHTML=comp.length?comp.map(card).join(''):'<div class="empty">无同套系记录</div>';
+  $('subs').innerHTML=sub.length?sub.map(card).join(''):'<div class="empty">无同口径记录（该件缺牙口数据）</div>';
+  document.querySelectorAll('#companions .item,#subs .item').forEach(el=>el.addEventListener('click',()=>{
+    $('pa').value=a;$('pb').value=el.dataset.code;renderCheck();
+    $('verdict').scrollIntoView({behavior:'smooth',block:'center'});}));
+}
+$('exp').addEventListener('input',renderExplore);
+
+// 示例开局
+$('pa').value='CC20945';$('pb').value='CC20831';renderCheck();
+$('exp').value='CC20945';renderExplore();
+</script>

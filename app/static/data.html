@@ -1,0 +1,123 @@
+<!doctype html><html lang="zh"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>李记包装 · 数据</title>
+<style>
+:root{--bg:#f3f4f6;--surface:#fff;--surface2:#eceef2;--ink:#191c21;--ink2:#5c626c;--line:#dbdee4;
+ --accent:#b06a2c;--accent2:#8a5220;--soft:rgba(176,106,44,.11);--good:#2f7d5b;--warn:#b5791f;--bad:#b23a2e;
+ --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,monospace;}
+@media(prefers-color-scheme:dark){:root{--bg:#131519;--surface:#1b1e23;--surface2:#22262d;--ink:#e6e8ec;--ink2:#98a0ab;--line:#2c313a;--accent:#d8964f;--accent2:#e6ac6c;--soft:rgba(216,150,79,.14);--good:#54ab82;--warn:#d3a24a;--bad:#dd6a5c;}}
+*{box-sizing:border-box}body{margin:0;font-family:var(--sans);background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+.wrap{max-width:900px;margin:0 auto;padding:clamp(16px,3vw,32px);display:flex;flex-direction:column;gap:18px}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);font-weight:600}
+h1{margin:.1em 0 0;font-size:clamp(1.5rem,3vw,2rem)}
+.lede{color:var(--ink2);font-size:.9rem;margin:.3em 0 0;max-width:64ch}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.card>h2{font-size:1rem;margin:0;padding:14px 18px;border-bottom:1px solid var(--line);background:var(--surface2);display:flex;justify-content:space-between;align-items:center}
+.card>h2 .k{font-family:var(--mono);font-size:.68rem;color:var(--ink2);letter-spacing:.08em;font-weight:400}
+.body{padding:18px;display:flex;flex-direction:column;gap:14px}
+button{font-family:var(--sans);font-size:.92rem;font-weight:600;border:1px solid var(--line);border-radius:9px;padding:11px 16px;background:var(--surface);color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--accent)} button.pri{background:var(--accent);color:#fff;border-color:var(--accent)} button.pri:hover{background:var(--accent2)}
+button.sm{padding:5px 10px;font-size:.78rem;font-weight:500} button:disabled{opacity:.5;cursor:default}
+.uprow{display:flex;gap:10px;flex-wrap:wrap}
+.uprow input[type=file]{flex:1;min-width:220px;font-family:var(--mono);font-size:.85rem;background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:10px}
+.preview{border:1px dashed var(--accent);background:var(--soft);border-radius:11px;padding:15px;display:none;flex-direction:column;gap:11px}
+.preview .sum{font-weight:600;font-size:1.02rem}
+.pv-actions{display:flex;gap:8px;align-items:center}
+.impnote{font-size:.85rem;display:flex;flex-direction:column;gap:4px}
+.muted{color:var(--ink2)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.stat{background:var(--surface);padding:14px 16px;display:flex;flex-direction:column;gap:3px}
+.stat .v{font-size:1.5rem;font-weight:700;font-family:var(--mono);letter-spacing:-.02em}
+.stat .l{font-size:.74rem;color:var(--ink2)}
+.gtitle{font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--accent2);margin:4px 0 2px}
+.audit{font-size:.82rem;color:var(--ink2);display:flex;flex-direction:column;gap:5px}
+.audit .line{display:flex;gap:10px;flex-wrap:wrap} .audit .mono{color:var(--ink)}
+.empty{color:var(--ink2);font-size:.85rem}
+table{border-collapse:collapse;width:100%;font-size:.82rem}
+th{text-align:left;font-family:var(--mono);font-size:.64rem;text-transform:uppercase;letter-spacing:.04em;color:var(--ink2);padding:6px 8px;border-bottom:1px solid var(--line)}
+td{padding:5px 8px;border-bottom:1px solid var(--line)} tr:last-child td{border-bottom:none}
+td.num{text-align:right;font-family:var(--mono)}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--good);color:#fff;padding:11px 20px;border-radius:10px;font-size:.9rem;opacity:0;transition:opacity .2s;pointer-events:none;z-index:99}
+.toast.show{opacity:1}
+</style></head><body>
+<div class="wrap">
+  <div><span class="eyebrow">李记包装 · 数据</span><h1>数据</h1>
+    <p class="lede">工厂发来新报价单，传上来自动读进系统；解析给你看一眼，<b>确认后才入库</b>。库里现有数据也列在下面。</p></div>
+
+  <section class="card">
+    <h2>上传新报价单 <span class="k">Excel → 解析 → 你确认 → 入库</span></h2>
+    <div class="body">
+      <div class="uprow">
+        <input type="file" id="xlsx" accept=".xlsx,.xls">
+        <button class="pri" id="impbtn" onclick="impPreview()">解析预览</button>
+      </div>
+      <div class="preview" id="imp-preview">
+        <div class="sum" id="imp-sum"></div>
+        <div class="impnote" id="imp-detail"></div>
+        <div class="pv-actions">
+          <button class="pri" id="imp-apply" onclick="impApply()">✔ 确认导入</button>
+          <button class="sm" onclick="impCancel()">取消</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>库里现有数据 <span class="k">DATABASE</span></h2>
+    <div class="body">
+      <div class="stats" id="stats"></div>
+      <div class="gtitle">最近导入</div>
+      <div class="audit" id="imports"></div>
+    </div>
+  </section>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+const $=id=>document.getElementById(id);
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1600);}
+async function jget(u){const r=await fetch(u);if(!r.ok)throw new Error(await r.text());return r.json();}
+
+let impFile=null;
+async function impPreview(){
+  const f=$('xlsx').files[0]; if(!f){toast('先选一个 Excel 文件');return;}
+  impFile=f; $('impbtn').disabled=true;$('impbtn').textContent='解析中…';
+  try{
+    const fd=new FormData();fd.append('file',f);
+    const r=await fetch('/api/import/preview',{method:'POST',body:fd});
+    const d=await r.json(); if(!r.ok)throw new Error(d.detail||'失败');
+    if(!d.ok){$('imp-sum').textContent=d.msg||'没解析到价目行';$('imp-detail').innerHTML='';$('imp-apply').style.display='none';}
+    else{
+      $('imp-sum').innerHTML=`解析到 <b>${d.n_rows}</b> 条价目 · 套系 ${d.series.join(' / ')||'—'}`;
+      const ns=d.new_series.length?`<div>🆕 新套系：<b>${d.new_series.join('、')}</b></div>`:'';
+      const nc=`<div>新编码 <b>${d.n_new_codes}</b> 个${d.n_new_codes?'（'+d.new_codes.slice(0,10).join('、')+(d.n_new_codes>10?'…':'')+'）':''}</div>`;
+      const dc=d.n_dup_codes?`<div class="muted">与现有重复 ${d.n_dup_codes} 个——导入后新价生效，旧的保留可追溯</div>`:'';
+      const rows=d.sample.map(s=>`<tr><td class="mono">${s.code||''}</td><td>${s.cap||''}</td><td>${s.process||''}</td><td class="num">${s.price??''}</td><td>${s.supplier||''}</td></tr>`).join('');
+      $('imp-detail').innerHTML=ns+nc+dc+`<table style="margin-top:6px"><thead><tr><th>编码</th><th>容量</th><th>工艺</th><th>价</th><th>供应商</th></tr></thead><tbody>${rows}</tbody></table>`;
+      $('imp-apply').style.display='';
+    }
+    $('imp-preview').style.display='flex';
+  }catch(e){toast('出错：'+e.message);}
+  $('impbtn').disabled=false;$('impbtn').textContent='解析预览';
+}
+function impCancel(){$('imp-preview').style.display='none';impFile=null;}
+async function impApply(){
+  if(!impFile)return;
+  try{
+    const fd=new FormData();fd.append('file',impFile);
+    const r=await fetch('/api/import/apply',{method:'POST',body:fd});
+    const d=await r.json(); if(!r.ok)throw new Error(d.detail||'失败');
+    toast(`已导入 ${d.imported} 条价目`);impCancel();$('xlsx').value='';loadStats();
+  }catch(e){toast('导入失败：'+e.message);}
+}
+
+async function loadStats(){
+  const d=await jget('/api/stats');
+  const tiles=[['套系',d.counts.series],['产品编码',d.counts.products.toLocaleString()],
+    ['价目行',d.counts.price_rows.toLocaleString()],['玻璃瓶',d.counts.glass.toLocaleString()]];
+  $('stats').innerHTML=tiles.map(([l,v])=>`<div class="stat"><span class="v">${v}</span><span class="l">${l}</span></div>`).join('');
+  $('imports').innerHTML=d.imports.length?d.imports.map(a=>`<div class="line">
+    <span class="mono">${(a.ts||'').slice(5,16)}</span><span>${a.target||''}</span><span class="mono">${a.after||''}</span></div>`).join('')
+    :'<div class="empty">还没有通过上传导入的报价单（现有数据来自初始建库）</div>';
+}
+loadStats();
+</script></body></html>

@@ -1,0 +1,167 @@
+<!doctype html><html lang="zh"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>李记包装 · 规则</title>
+<style>
+:root{--bg:#f3f4f6;--surface:#fff;--surface2:#eceef2;--ink:#191c21;--ink2:#5c626c;--line:#dbdee4;
+ --accent:#b06a2c;--accent2:#8a5220;--soft:rgba(176,106,44,.11);--good:#2f7d5b;--warn:#b5791f;--bad:#b23a2e;
+ --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,monospace;}
+@media(prefers-color-scheme:dark){:root{--bg:#131519;--surface:#1b1e23;--surface2:#22262d;--ink:#e6e8ec;--ink2:#98a0ab;--line:#2c313a;--accent:#d8964f;--accent2:#e6ac6c;--soft:rgba(216,150,79,.14);--good:#54ab82;--warn:#d3a24a;--bad:#dd6a5c;}}
+*{box-sizing:border-box}body{margin:0;font-family:var(--sans);background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+.wrap{max-width:900px;margin:0 auto;padding:clamp(16px,3vw,32px);display:flex;flex-direction:column;gap:18px}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);font-weight:600}
+h1{margin:.1em 0 0;font-size:clamp(1.5rem,3vw,2rem)}
+.lede{color:var(--ink2);font-size:.9rem;margin:.3em 0 0;max-width:64ch}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.card>h2{font-size:1rem;margin:0;padding:14px 18px;border-bottom:1px solid var(--line);background:var(--surface2);display:flex;justify-content:space-between;align-items:center}
+.card>h2 .k{font-family:var(--mono);font-size:.68rem;color:var(--ink2);letter-spacing:.08em;font-weight:400}
+.body{padding:18px;display:flex;flex-direction:column;gap:14px}
+input{font-family:var(--sans);font-size:1rem;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:12px 13px}
+input:focus{outline:2px solid var(--accent);outline-offset:0}
+button{font-family:var(--sans);font-size:.92rem;font-weight:600;border:1px solid var(--line);border-radius:9px;padding:11px 16px;background:var(--surface);color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--accent)} button.pri{background:var(--accent);color:#fff;border-color:var(--accent)} button.pri:hover{background:var(--accent2)}
+button.sm{padding:5px 10px;font-size:.78rem;font-weight:500} button:disabled{opacity:.5;cursor:default}
+.copilot-in{display:flex;gap:10px}.copilot-in input{flex:1;font-family:var(--mono)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font-size:.74rem;font-family:var(--mono);background:var(--soft);color:var(--accent2);padding:4px 10px;border-radius:20px;cursor:pointer;border:1px solid transparent}
+.chip:hover{border-color:var(--accent)}
+.preview{border:1px dashed var(--accent);background:var(--soft);border-radius:11px;padding:15px;display:none;flex-direction:column;gap:11px}
+.preview .sum{font-weight:600;font-size:1.02rem}
+.diff{display:flex;align-items:center;gap:12px;font-family:var(--mono);font-size:.95rem;flex-wrap:wrap}
+.diff .b{color:var(--ink2);text-decoration:line-through} .diff .arrow{color:var(--accent)} .diff .a{color:var(--good);font-weight:700}
+.pv-actions{display:flex;gap:8px;align-items:center}
+.engine{font-size:.66rem;font-family:var(--mono);color:var(--ink2);margin-left:auto}
+.group{display:flex;flex-direction:column;gap:2px}
+.gtitle{font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--accent2);margin:6px 0 4px}
+.rule{display:flex;align-items:center;gap:10px;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);font-size:.98rem}
+.rule:hover{border-color:var(--accent)}
+.rule .txt{flex:1;line-height:1.35}
+.rule .num{font-weight:700;color:var(--accent2);font-family:var(--mono)}
+.rule .acts{display:flex;gap:6px;opacity:.65} .rule:hover .acts{opacity:1}
+.rule .x{cursor:pointer;color:var(--ink2);font-family:var(--mono);border:1px solid var(--line);border-radius:7px;padding:3px 8px;font-size:.76rem;background:var(--surface)}
+.rule .x:hover{border-color:var(--bad);color:var(--bad)}
+.rule .e{cursor:pointer;color:var(--ink2);border:1px solid var(--line);border-radius:7px;padding:3px 8px;font-size:.76rem;background:var(--surface)}
+.rule .e:hover{border-color:var(--accent);color:var(--accent2)}
+.empty{color:var(--ink2);font-size:.85rem;padding:6px 2px}
+.muted{color:var(--ink2)}
+.audit{font-size:.8rem;color:var(--ink2);display:flex;flex-direction:column;gap:5px;max-height:200px;overflow-y:auto}
+.audit .line{display:flex;gap:8px;flex-wrap:wrap}
+.audit .mono{color:var(--ink)}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--good);color:#fff;padding:11px 20px;border-radius:10px;font-size:.9rem;opacity:0;transition:opacity .2s;pointer-events:none;z-index:99}
+.toast.show{opacity:1}
+</style></head><body>
+<div class="wrap">
+  <div><span class="eyebrow">李记包装 · 规则维护</span><h1>规则</h1>
+    <p class="lede">每条规则就是<b>一句人话</b>，背后接着报价里的算式。用下面的框，说一句话就能新增或修改。</p></div>
+
+  <section class="card">
+    <h2>说一句话，加 / 改一条规则 <span class="k">AI 副驾 · 你确认才生效</span></h2>
+    <div class="body">
+      <div class="copilot-in">
+        <input id="ask" placeholder="如：B客户加成改成28%" onkeydown="if(event.key==='Enter')propose()">
+        <button class="pri" id="askbtn" onclick="propose()">解析</button>
+      </div>
+      <div class="chips" id="examples"></div>
+      <div class="preview" id="preview">
+        <div class="sum" id="pv-sum"></div>
+        <div class="diff" id="pv-diff"></div>
+        <div class="pv-actions">
+          <button class="pri" id="applybtn" onclick="applyChange()">✔ 确认生效</button>
+          <button class="sm" onclick="cancelPv()">取消</button>
+          <span class="engine" id="pv-engine"></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>现有规则 <span class="k" id="rulecount"></span></h2>
+    <div class="body" id="rules"></div>
+  </section>
+
+  <section class="card">
+    <h2>改动记录 <span class="k">留痕</span></h2>
+    <div class="body"><div class="audit" id="audit"></div></div>
+  </section>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+const $=id=>document.getElementById(id);
+const EX=["B客户加成改成28%","烫金费改成0.3","2万个以上打5%折","CC20945和CC20793不兼容"];
+let currentProposal=null;
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1600);}
+async function jget(u){const r=await fetch(u);if(!r.ok)throw new Error(await r.text());return r.json();}
+async function jpost(u,b){const r=await fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});
+  if(!r.ok){throw new Error((await r.json().catch(()=>({detail:r.statusText}))).detail||'失败');}return r.json();}
+
+$('examples').innerHTML=EX.map(e=>`<span class="chip" onclick="fill('${e}')">${e}</span>`).join('');
+function fill(t){$('ask').value=t;$('ask').focus();propose();}
+async function propose(){
+  const text=$('ask').value.trim(); if(!text)return;
+  $('askbtn').disabled=true;$('askbtn').textContent='解析中…';
+  try{
+    const {proposal,preview}=await jpost('/api/copilot/propose',{text});
+    currentProposal=proposal;
+    if(proposal.action==='clarify'){
+      showPv(proposal.summary,`<span class="muted">${proposal.clarification||'请补充信息'}</span>`,proposal._engine,false);
+    }else{
+      const d=`<b>${preview.key||''}</b>：<span class="b">${preview.before??''}</span> <span class="arrow">→</span> <span class="a">${preview.after??''}</span>`;
+      showPv(proposal.summary,d,proposal._engine,true);
+    }
+  }catch(e){toast('出错：'+e.message);}
+  $('askbtn').disabled=false;$('askbtn').textContent='解析';
+}
+function showPv(sum,diff,engine,canApply){
+  $('pv-sum').textContent=sum;$('pv-diff').innerHTML=diff;
+  $('pv-engine').textContent='引擎: '+(engine||'?');
+  $('applybtn').style.display=canApply?'':'none';$('preview').style.display='flex';
+}
+function cancelPv(){$('preview').style.display='none';currentProposal=null;}
+async function applyChange(){
+  if(!currentProposal)return;
+  try{await jpost('/api/copilot/apply',{proposal:currentProposal});
+    toast('已生效 ✓');cancelPv();$('ask').value='';loadAll();
+  }catch(e){toast('失败：'+e.message);}
+}
+
+async function loadRules(){
+  const r=await jget('/api/rules');
+  const ov=await jget('/api/compat/overrides');
+  let n=r.markups.length+r.qty.length+Object.keys(r.fees).length+ov.length;
+  $('rulecount').textContent=n+' 条';
+  const box=$('rules'); let html='';
+  html+=`<div class="group"><div class="gtitle">客户加成</div>`;
+  html+= r.markups.map(m=>`<div class="rule"><span class="txt"><b>${m.tier}</b> 类客户 · 工厂价上加 <span class="num">${m.pct}%</span></span>
+    <span class="acts"><span class="e" onclick="fill('${m.tier}客户加成改成 ${m.pct}%')">改</span>
+    <span class="x" onclick="delRule({kind:'markup',tier:'${m.tier}'},'${m.tier}档加成')">删</span></span></div>`).join('')||'<div class="empty">无</div>';
+  html+=`</div>`;
+  html+=`<div class="group"><div class="gtitle">数量档折扣</div>`;
+  html+= r.qty.map(q=>`<div class="rule"><span class="txt">满 <b>${q.min.toLocaleString()}</b> 个 · ${q.discount_pct>0?('整单降 <span class="num">'+q.discount_pct+'%</span>'):'基准价（不打折）'}</span>
+    <span class="acts"><span class="e" onclick="fill('${q.min}个以上打 ${q.discount_pct||0}%折')">改</span>
+    <span class="x" onclick="delRule({kind:'qty',min_qty:${q.min}},'≥${q.min}')">删</span></span></div>`).join('')||'<div class="empty">无</div>';
+  html+=`</div>`;
+  html+=`<div class="group"><div class="gtitle">印刷 / 表面工艺费</div>`;
+  html+= Object.entries(r.fees).map(([p,f])=>`<div class="rule"><span class="txt">${p} · 每${f.unit.replace('每','')}加 <span class="num">¥${f.fee}</span></span>
+    <span class="acts"><span class="e" onclick="fill('${p}费改成 ${f.fee}')">改</span>
+    <span class="x" onclick="delRule({kind:'fee',process:'${p}'},'${p}')">删</span></span></div>`).join('')||'<div class="empty">无</div>';
+  html+=`</div>`;
+  html+=`<div class="group"><div class="gtitle">兼容规则（人工确认）</div>`;
+  html+= ov.length? ov.map(o=>`<div class="rule"><span class="txt"><span class="mono">${o.code_a}</span> 与 <span class="mono">${o.code_b}</span> · <b>${o.verdict==='yes'?'可以配 ✅':'不能配 ❌'}</b>${o.reason?' <span class="muted">（'+o.reason+'）</span>':''}</span>
+    <span class="acts"><span class="x" onclick="delRule({kind:'override',code_a:'${o.code_a}',code_b:'${o.code_b}'},'${o.code_a}⇄${o.code_b}')">删</span></span></div>`).join('')
+    :'<div class="empty">还没有人工兼容规则（可在上面用一句话添加，如「CC20945和CC20793不兼容」）</div>';
+  html+=`</div>`;
+  box.innerHTML=html;
+}
+async function delRule(body,label){
+  if(!confirm('删除这条规则？\n'+label))return;
+  try{await jpost('/api/rule/delete',body);toast('已删除');loadAll();}catch(e){toast('失败：'+e.message);}
+}
+async function loadAudit(){
+  const rows=await jget('/api/audit');
+  $('audit').innerHTML=rows.length?rows.slice(0,14).map(a=>`<div class="line">
+    <span class="mono">${(a.ts||'').slice(5,16)}</span><span>${a.action}</span><span>${a.target||''}</span>
+    <span class="mono">${(a.before??'')} → <b>${(a.after??'')}</b></span>
+    <span class="chip">${a.source||''}</span></div>`).join(''):'<div class="empty">暂无改动</div>';
+}
+async function loadAll(){await loadRules();await loadAudit();}
+loadAll();
+</script></body></html>
