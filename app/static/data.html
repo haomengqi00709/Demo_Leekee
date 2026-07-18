@@ -4,7 +4,7 @@
 :root{--bg:#f3f4f6;--surface:#fff;--surface2:#eceef2;--ink:#191c21;--ink2:#5c626c;--line:#dbdee4;
  --accent:#b06a2c;--accent2:#8a5220;--soft:rgba(176,106,44,.11);--good:#2f7d5b;--warn:#b5791f;--bad:#b23a2e;
  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,monospace;}
-@media(prefers-color-scheme:dark){:root{--bg:#131519;--surface:#1b1e23;--surface2:#22262d;--ink:#e6e8ec;--ink2:#98a0ab;--line:#2c313a;--accent:#d8964f;--accent2:#e6ac6c;--soft:rgba(216,150,79,.14);--good:#54ab82;--warn:#d3a24a;--bad:#dd6a5c;}}
+/* 强制浅色主题（报价单是要打印/发给客户的文档，始终用白底） */
 *{box-sizing:border-box}body{margin:0;font-family:var(--sans);background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
 .wrap{max-width:900px;margin:0 auto;padding:clamp(16px,3vw,32px);display:flex;flex-direction:column;gap:18px}
 .mono{font-family:var(--mono);font-variant-numeric:tabular-nums}

@@ -5,9 +5,7 @@
   --accent:#b06a2c;--accent2:#8a5220;--soft:rgba(176,106,44,.11);--good:#2f7d5b;--warn:#a9812a;
   --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
   --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;}
-@media (prefers-color-scheme:dark){:root{
-  --bg:#131519;--surface:#1b1e23;--surface2:#22262d;--ink:#e6e8ec;--ink2:#98a0ab;--line:#2c313a;
-  --accent:#d8964f;--accent2:#e6ac6c;--soft:rgba(216,150,79,.14);--good:#54ab82;--warn:#c99a44;}}
+/* 强制浅色主题（报价单是要打印/发给客户的文档，始终用白底） */
 :root[data-theme="dark"]{--bg:#131519;--surface:#1b1e23;--surface2:#22262d;--ink:#e6e8ec;--ink2:#98a0ab;--line:#2c313a;--accent:#d8964f;--accent2:#e6ac6c;--soft:rgba(216,150,79,.14);--good:#54ab82;--warn:#c99a44;}
 :root[data-theme="light"]{--bg:#f3f4f6;--surface:#fff;--surface2:#eceef2;--ink:#191c21;--ink2:#5c626c;--line:#dbdee4;--accent:#b06a2c;--accent2:#8a5220;--soft:rgba(176,106,44,.11);--good:#2f7d5b;--warn:#a9812a;}
 *{box-sizing:border-box}html,body{margin:0;padding:0;background:var(--bg)}
@@ -151,7 +149,7 @@ footer{color:var(--ink2);font-size:.74rem;text-align:center;padding-top:6px}
         <div>加成/数量折扣/印刷费为占位口径，正式报价前需与李记核对</div>
       </div>
       <div class="actions noprint" id="actions" style="display:none">
-        <button class="btn pri" onclick="window.print()">打印 / 导出 PDF</button>
+        <button class="btn pri" onclick="printQuote()">打印 / 导出 PDF</button>
         <button class="btn" id="copy-btn">复制文本报价</button>
         <button class="btn sm" id="clear-btn">清空</button>
       </div>
@@ -315,6 +313,50 @@ $('g-cur').addEventListener('change',e=>{st.cur=e.target.value;$('fx-wrap').styl
 $('g-fx').addEventListener('input',()=>{renderPreview();renderCart();});
 $('q-qty').addEventListener('input',renderPreview);
 $('clear-btn').addEventListener('click',()=>{st.cart=[];renderCart();});
+// 打印/导出：另开一个干净的报价单文档（CJK 安全字体，避免打印时中文丢失 & 版面乱）
+function printQuote(){
+  if(!st.cart.length){toast('报价单是空的，先加产品');return;}
+  let rows='',tot=0,tq=0;
+  st.cart.forEach((l,i)=>{
+    const unit=l.base*(1+st.markup.pct/100), amt=unit*l.qty; tot+=amt; tq+=l.qty;
+    const coll=l.coll==='__single__'?'单品':l.coll;
+    rows+=`<tr><td class="c">${i+1}</td><td><b>${coll} · ${l.code}</b> ${l.cap||''}<div class="cfg">${l.cfg}${l.prints?' · 印刷 '+l.prints:''}</div></td><td class="n">${l.qty.toLocaleString()}</td><td class="n">${money(unit)}</td><td class="n">${money(amt)}</td></tr>`;
+  });
+  const dt=new Date(), pad=n=>String(n).padStart(2,'0');
+  const today=`${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())}`;
+  const doc=`<!doctype html><html lang="zh"><head><meta charset="utf-8"><title>李记包装报价单 ${today}</title><style>
+*{box-sizing:border-box}
+body{font-family:"PingFang SC","Microsoft YaHei","Hiragino Sans GB","Heiti SC",system-ui,sans-serif;color:#1a1c20;margin:0;padding:34px;font-size:13px;line-height:1.5}
+.hd{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #b06a2c;padding-bottom:12px}
+.co{font-size:21px;font-weight:800;color:#b06a2c;letter-spacing:.02em}
+.co small{display:block;font-size:10px;color:#999;letter-spacing:.28em;font-weight:500;margin-top:3px}
+.meta{text-align:right;font-size:12px;color:#555;line-height:1.9} .meta b{color:#1a1c20}
+table.items{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:18px}
+table.items th{text-align:left;background:#f6f2ea;border:1px solid #e6e0d5;padding:8px 10px;font-weight:700;font-size:11px;letter-spacing:.03em}
+table.items td{border:1px solid #e6e0d5;padding:8px 10px;vertical-align:top}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap} td.c{text-align:center;color:#999}
+.cfg{color:#7a7a7a;font-size:11px;margin-top:3px}
+.tot{margin-top:16px;display:flex;justify-content:flex-end}
+.tot table{border-collapse:collapse} .tot td{padding:4px 12px;font-size:13px} .tot td.n{text-align:right}
+.tot .big td{font-size:18px;font-weight:800;color:#b06a2c;border-top:2px solid #b06a2c;padding-top:9px}
+.terms{margin-top:22px;font-size:11.5px;color:#666;line-height:1.9;border-top:1px solid #eee;padding-top:12px}
+@media print{@page{margin:14mm}body{padding:0}}
+</style></head><body>
+<div class="hd"><div class="co">李记包装<small>LEEKEE PACKAGING</small></div>
+<div class="meta">报价单 · QUOTATION<br>日期 <b>${today}</b><br>客户加成 <b>${st.markup.tier} 档 (+${st.markup.pct}%)</b></div></div>
+<table class="items"><thead><tr><th class="c">#</th><th>产品 / 配置</th><th class="n">数量</th><th class="n">单价</th><th class="n">金额</th></tr></thead><tbody>${rows}</tbody></table>
+<div class="tot"><table><tr><td>合计数量</td><td class="n">${tq.toLocaleString()} 件</td></tr>
+<tr class="big"><td>报价总额</td><td class="n">${money(tot)}</td></tr></table></div>
+<div class="terms">MOQ 5,000 起 · 价格随数量分档（≥20,000 / ≥50,000 更优）<br>
+付款 30% 定金 / 70% T/T 见提单 · FOB 广州 · 报价有效期 30 天<br>
+注：加成 / 数量折扣 / 印刷费为占位口径，正式报价前需与李记核对。</div>
+</body></html>`;
+  const w=window.open('','_blank');
+  if(!w){toast('请允许弹出窗口以导出报价单');return;}
+  w.document.write(doc); w.document.close(); w.focus();
+  setTimeout(()=>{ w.print(); }, 300);
+}
+
 $('copy-btn').addEventListener('click',()=>{
   let t='李记包装 报价单\n客户加成: '+st.markup.tier+' 档 +'+st.markup.pct+'%\n\n';
   st.cart.forEach((l,i)=>{const unit=l.base*(1+st.markup.pct/100);
