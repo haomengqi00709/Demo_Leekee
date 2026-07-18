@@ -4,13 +4,14 @@
 import os, re, json
 from db import audit
 
-# LLM 配置 —— OpenAI 兼容接口。DeepSeek / Kimi(Moonshot) / OpenAI 都行，只改这三个环境变量：
-#   DeepSeek : LLM_BASE_URL=https://api.deepseek.com          LLM_MODEL=deepseek-chat
-#   Kimi     : LLM_BASE_URL=https://api.moonshot.cn/v1        LLM_MODEL=kimi-k2-0905-preview (或 moonshot-v1-8k)
-#   OpenAI   : LLM_BASE_URL=https://api.openai.com/v1         LLM_MODEL=gpt-4o
+# LLM 配置 —— OpenAI 兼容接口，默认走 Kimi(Moonshot)。切别家只改这三个环境变量：
+#   Kimi(默认): LLM_BASE_URL=https://api.moonshot.cn/v1   LLM_MODEL=moonshot-v1-8k (或 kimi-k2-0905-preview)
+#              海外账号用 https://api.moonshot.ai/v1
+#   DeepSeek : LLM_BASE_URL=https://api.deepseek.com       LLM_MODEL=deepseek-chat
+#   OpenAI   : LLM_BASE_URL=https://api.openai.com/v1       LLM_MODEL=gpt-4o
 LLM_API_KEY  = os.environ.get("LLM_API_KEY", "")
-LLM_BASE_URL = os.environ.get("LLM_BASE_URL", "https://api.deepseek.com")
-LLM_MODEL    = os.environ.get("LLM_MODEL", "deepseek-chat")
+LLM_BASE_URL = os.environ.get("LLM_BASE_URL", "https://api.moonshot.cn/v1")
+LLM_MODEL    = os.environ.get("LLM_MODEL", "moonshot-v1-8k")
 
 # propose_change 的参数 schema（OpenAI function calling 通用格式）
 SCHEMA = {
