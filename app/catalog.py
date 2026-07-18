@@ -69,11 +69,11 @@ def build_catalog(con):
     for code, path in c.execute("""SELECT product_code,saved_path FROM images
             WHERE mapped=1 AND product_code GLOB '[A-Z][A-Z][0-9]*' ORDER BY product_code"""):
         if code in imgmap or code not in used: continue
-        full = os.path.join(IMGDIR, path)
-        if not os.path.exists(full) or os.path.getsize(full) > 48000: continue
+        full = os.path.join(IMGDIR, path.replace('images/', 'images_thumb/', 1))
+        if not os.path.exists(full): continue
         ext = os.path.splitext(full)[1].lstrip('.').replace('jpg','jpeg')
         imgmap[code] = f"data:image/{ext};base64," + base64.b64encode(open(full,'rb').read()).decode()
-        if len(imgmap) >= 70: break
+        if len(imgmap) >= 300: break
     # 兼容指纹 + override
     specs, ovr = {}, []
     try:

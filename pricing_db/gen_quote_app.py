@@ -87,15 +87,15 @@ import base64
 used_codes = set()
 for ents in products.values():
     for e in ents: used_codes.add(e['code'])
-# 只嵌入小体积原图(<=48KB)，保证页面秒开；每编码一张，最多 70 张
+# 嵌入 images_thumb/ 里的缩略图（都已缩到 ~150px、体积小），每编码一张
 imgmap = {}
 for code, path in c.execute("SELECT product_code,saved_path FROM images WHERE mapped=1 AND product_code GLOB '[A-Z][A-Z][0-9]*' ORDER BY product_code"):
     if code in imgmap or code not in used_codes: continue
-    full = os.path.join(D, path)
-    if not os.path.exists(full) or os.path.getsize(full) > 48000: continue
+    full = os.path.join(D, path.replace('images/', 'images_thumb/', 1))
+    if not os.path.exists(full): continue
     ext = os.path.splitext(full)[1].lstrip('.').replace('jpg','jpeg')
     imgmap[code] = f"data:image/{ext};base64,"+base64.b64encode(open(full,'rb').read()).decode()
-    if len(imgmap) >= 70: break
+    if len(imgmap) >= 300: break
 
 # 规则
 markups = [{'tier':t,'pct':m} for t,m in c.execute("SELECT tier,markup_pct FROM customer_markups")]
@@ -149,8 +149,9 @@ input[type=number]{width:96px;font-family:var(--mono)}
 .body{padding:16px;display:flex;flex-direction:column;gap:14px}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .prodhead{display:flex;gap:12px;align-items:center}
-.thumb{width:60px;height:60px;border-radius:8px;background:var(--surface2);object-fit:cover;flex:none;border:1px solid var(--line)}
-.thumb.ph{display:flex;align-items:center;justify-content:center;color:var(--ink2);font-size:.6rem;font-family:var(--mono)}
+.thumb{width:60px;height:60px;border-radius:8px;background:var(--surface2);flex:none;border:1px solid var(--line);overflow:hidden;display:flex;align-items:center;justify-content:center}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.thumb.ph{color:var(--ink2);font-size:.6rem;font-family:var(--mono)}
 .groups{display:flex;flex-direction:column;gap:10px}
 .group{display:flex;flex-direction:column;gap:4px}
 .group .gname{font-size:.72rem;font-family:var(--mono);color:var(--accent2);letter-spacing:.04em}
@@ -225,7 +226,7 @@ footer{color:var(--ink2);font-size:.74rem;text-align:center;padding-top:6px}
           <label class="f">套系 / 类别<select id="sel-coll"></select></label>
           <label class="f">产品编号 / 规格<select id="sel-prod"></select></label>
         </div>
-        <div class="prodhead"><img id="thumb" class="thumb ph" alt="">
+        <div class="prodhead"><div id="thumb" class="thumb ph"></div>
           <div style="font-size:.8rem;color:var(--ink2)" id="prod-meta"></div></div>
         <div class="groups" id="groups"></div>
         <div>
@@ -333,7 +334,7 @@ function setProd(i){st.prod=DB.products[st.coll][i];st.sel={};
   const neck=e.neck?` · <span class="chip">口径 ${e.neck}</span>`:'';
   $('prod-meta').innerHTML=`<b class="mono">${e.code}</b> ${e.cap||''} ${e.sup?'· 供应商 '+e.sup:''} · ${e.groups.length} 个部件${neck}`;
   const img=DB.imgmap[e.code];const t=$('thumb');
-  if(img){t.src=img;t.className='thumb';t.style.display='';}else{t.className='thumb ph';t.removeAttribute('src');t.textContent='无图';}
+  if(img){t.className='thumb';t.innerHTML='<img src="'+img+'" alt="">';}else{t.className='thumb ph';t.textContent='无图';}
   const gc=$('groups');gc.innerHTML='';
   e.groups.forEach((g,gi)=>{st.sel[gi]=0;
     const d=document.createElement('div');d.className='group';
@@ -471,10 +472,11 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 付款 30% 定金 / 70% T/T 见提单 · FOB 广州 · 报价有效期 30 天<br>
 注：加成 / 数量折扣 / 印刷费为占位口径，正式报价前需与李记核对。</div>
 </body></html>`;
-  const w=window.open('','_blank');
-  if(!w){toast('请允许弹出窗口以导出报价单');return;}
-  w.document.write(doc); w.document.close(); w.focus();
-  setTimeout(()=>{ w.print(); }, 300);
+  const old=document.getElementById('__pf'); if(old) old.remove();
+  const f=document.createElement('iframe'); f.id='__pf';
+  f.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0';
+  f.onload=()=>{ setTimeout(()=>{ try{f.contentWindow.focus();f.contentWindow.print();}catch(e){toast('打印失败:'+e.message);} }, 250); };
+  document.body.appendChild(f); f.srcdoc=doc;
 }
 
 $('copy-btn').addEventListener('click',()=>{
