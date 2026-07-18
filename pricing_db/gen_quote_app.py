@@ -471,12 +471,13 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 <div class="terms">MOQ 5,000 起 · 价格随数量分档（≥20,000 / ≥50,000 更优）<br>
 付款 30% 定金 / 70% T/T 见提单 · FOB 广州 · 报价有效期 30 天<br>
 注：加成 / 数量折扣 / 印刷费为占位口径，正式报价前需与李记核对。</div>
+<scr`+`ipt>window.onload=function(){setTimeout(function(){window.print();},150);};window.onafterprint=function(){setTimeout(function(){window.close();},80);};</scr`+`ipt>
 </body></html>`;
-  const old=document.getElementById('__pf'); if(old) old.remove();
-  const f=document.createElement('iframe'); f.id='__pf';
-  f.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0';
-  f.onload=()=>{ setTimeout(()=>{ try{f.contentWindow.focus();f.contentWindow.print();}catch(e){toast('打印失败:'+e.message);} }, 250); };
-  document.body.appendChild(f); f.srcdoc=doc;
+  // 用 Blob URL 打开一个真实新页面（比 document.write 可靠），页面自身 onload 触发打印
+  const url=URL.createObjectURL(new Blob([doc],{type:'text/html;charset=utf-8'}));
+  const w=window.open(url,'_blank');
+  if(!w){toast('请允许弹出窗口以导出报价单');URL.revokeObjectURL(url);return;}
+  setTimeout(()=>URL.revokeObjectURL(url),60000);
 }
 
 $('copy-btn').addEventListener('click',()=>{
